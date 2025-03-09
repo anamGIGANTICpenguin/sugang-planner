@@ -118,17 +118,17 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
               </div>
             </div>
           ) : (
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-start">
               <div>
-                <div className="flex items-center">
-                  {category.isMajor && (
-                    <span className="text-xs bg-[#8B0029] text-white px-1 rounded mr-1">전공</span>
-                  )}
-                  <div>{category.name}</div>
-                </div>
+                <div>{category.name}</div>
                 <div className="text-xs mt-1">
                   {totalCredits}/{category.requiredCredits} credits
                 </div>
+                {category.isMajor && (
+                  <div className="mt-1">
+                    <span className="text-xs bg-[#8B0029] text-white px-1 rounded">전공</span>
+                  </div>
+                )}
               </div>
               <button 
                 onClick={(e) => {
