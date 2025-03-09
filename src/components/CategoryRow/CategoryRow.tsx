@@ -1,3 +1,4 @@
+// src/components/CategoryRow/CategoryRow.tsx
 import React, { useState, useRef } from 'react';
 import CourseCell from '../CourseGrid/CourseCell';
 import { Category, Course, Semester } from '../../types';
@@ -82,7 +83,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
         <div 
           className={`p-2 bg-gray-100 border-r-2 font-medium ${
             isEditing ? 'bg-red-50 border-[#8B0029]' : 'border-[#8B0029] hover:bg-gray-200 cursor-pointer'
-          }`}
+          } dark:bg-gray-800 dark:text-white dark:border-[#9f1239] dark:hover:bg-gray-700`}
           onClick={isEditing ? undefined : handleCategoryClick}
           ref={categoryRef}
         >
@@ -103,7 +104,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                 onChange={(value) => setRequiredCredits(value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Required credits"
-                className="w-full p-0 border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none"
+                className="w-20 p-0 border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none"
                 min="0"
                 step="1"
               />
@@ -121,8 +122,8 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
             <div className="flex justify-between items-start">
               <div>
                 <div>{category.name}</div>
-                <div className="text-xs mt-1">
-                  {totalCredits}/{category.requiredCredits} credits
+                <div className="text-xs mt-1 text-[11px]">
+                  {totalCredits}/{category.requiredCredits} 학점
                 </div>
                 {category.isMajor && (
                   <div className="mt-1">
@@ -168,18 +169,18 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                 {/* Empty cell to add a new course - larger if category is empty for this semester */}
                 {isEmpty ? (
                   <div 
-                    className="cell empty border-0 hover:border hover:border-[#8B0029] hover:bg-red-50 cursor-pointer flex items-center justify-center group"
+                    className="cell empty border-0 hover:border hover:border-[#8B0029] hover:bg-red-50 cursor-pointer flex items-center justify-center group dark:hover:bg-[#202838] dark:hover:border-[#9f1239]"
                     onClick={() => {
                       // Set up temporary course and add it
                       const newCourse = {
-                        name: "New Course",
+                        name: "새 수업",
                         credits: 3,
                       };
                       addCourse(category.id, semester.id, newCourse);
                     }}
                     style={{ height: '100%', width: '100%', minHeight: '80px' }}
                   >
-                    <span className="text-xl text-[#8B0029] opacity-0 group-hover:opacity-100 transition-opacity duration-200">+</span>
+                    <span className="text-xl text-[#8B0029] opacity-0 group-hover:opacity-100 transition-opacity duration-200 dark:text-[#F8F2DE]">+</span>
                   </div>
                 ) : (
                   <CourseCell

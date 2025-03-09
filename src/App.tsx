@@ -1,9 +1,24 @@
-import React from 'react';
+// src/App.tsx
+import React, { useEffect } from 'react';
 import CourseGrid from './components/CourseGrid/CourseGrid';
+import ThemeToggle from './components/themeToggle';
 import { useCourseStore } from './store/courseStore';
+import { useThemeStore } from './store/themeStore';
 import './App.css';
 
 const App: React.FC = () => {
+  // Get theme data
+  const { darkMode } = useThemeStore();
+  
+  // Apply dark mode class to body
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
   // Get data for summary display in header
   const { categories, semesters } = useCourseStore();
 
@@ -48,23 +63,26 @@ const App: React.FC = () => {
   const overallCompletion = totalRequiredCredits > 0 ? (totalCompletedCredits / totalRequiredCredits) * 100 : 0;
 
   return (
-    <div className="app min-h-screen bg-gray-50">
-      <header className="bg-[#8B0029] text-white p-4 shadow-md">
+    <div className={`app min-h-screen ${darkMode ? 'bg-gray-900 text-[#F8F2DE]' : 'bg-[#F8F2DE]'}`}>
+      <header className={`${darkMode ? 'bg-[#4c0016]' : 'bg-[#8B0029]'} text-white p-4 shadow-md`}>
         <div className="container mx-auto">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-2xl font-bold">Course Planner</h1>
-              <p className="text-red-100">Plan your academic journey semester by semester</p>
+              <div className="flex items-center space-x-3">
+                <h1 className="text-2xl font-bold">호랭이 졸업길</h1>
+                <ThemeToggle />
+              </div>
+              <p className="text-red-100">어흥</p>
             </div>
             <div className="text-white text-sm w-96">
               <div className="mb-1">
                 <div className="flex justify-between items-center">
                   <span>Overall Progress:</span>
-                  <span>{Math.round(totalCompletedCredits)}/{totalRequiredCredits} cr ({Math.round(overallCompletion)}%)</span>
+                  <span>{Math.round(totalCompletedCredits)}/{totalRequiredCredits} 학점 ({Math.round(overallCompletion)}%)</span>
                 </div>
-                <div className="w-full bg-white/30 rounded-full h-1 mt-1">
+                <div className={`w-full ${darkMode ? 'bg-gray-700' : 'bg-green-100'} rounded-full h-1 mt-1`}>
                   <div 
-                    className="bg-white h-1 rounded-full" 
+                    className={`${darkMode ? 'bg-green-500' : 'bg-green-700'} h-1 rounded-full`} 
                     style={{ width: `${Math.min(100, overallCompletion)}%` }}
                   ></div>
                 </div>
@@ -109,10 +127,10 @@ const App: React.FC = () => {
                           {totalCredits}/{category.requiredCredits}
                         </span>
                       </div>
-                      <div className="w-full bg-white/30 rounded-full h-1">
+                      <div className={`w-full ${darkMode ? 'bg-gray-700' : 'bg-green-100'} rounded-full h-1`}>
                         <div 
                           className={`h-1 rounded-full ${
-                            completion >= 100 ? 'bg-green-300' : 'bg-white'
+                            darkMode ? 'bg-green-500' : 'bg-green-700'
                           }`}
                           style={{ width: `${Math.min(100, completion)}%` }}
                         ></div>
@@ -127,19 +145,14 @@ const App: React.FC = () => {
       </header>
 
       <main className="container mx-auto py-6 px-4 max-w-7xl">
-        <div className="bg-white rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4 text-[#8B0029]">Course Schedule</h2>
-          <p className="text-gray-600 mb-6 text-xs">
-            Click on cells to add or edit courses. Click on category names or semester headers to edit them.
-          </p>
-          
+        <div className="bg-transparent">
           <CourseGrid />
         </div>
       </main>
 
-      <footer className="bg-gray-100 border-t mt-12 py-6">
+      <footer className={`${darkMode ? 'bg-gray-900' : 'bg-[#F8F2DE]'} py-6`}>
         <div className="container mx-auto px-4 text-center text-gray-600">
-          <p>Course Planner App © {new Date().getFullYear()}</p>
+          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>여러분의 졸업을 응원하는 호랭이 © {new Date().getFullYear()}</p>
         </div>
       </footer>
     </div>
