@@ -1,3 +1,4 @@
+// src/components/CategoryRow/CategoryManager.tsx
 import React, { useState } from 'react';
 
 interface CategoryManagerProps {
@@ -11,7 +12,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ onAddCategory }) => {
   const [isMajor, setIsMajor] = useState(false);
 
   const handleAddClick = () => {
-    setIsAdding(true);
+    // Create a new category with default values
+    onAddCategory("New Category", 15, false);
   };
 
   const handleCancel = () => {
@@ -103,9 +105,10 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ onAddCategory }) => {
     <div className="category-manager mb-4">
       <button
         onClick={handleAddClick}
-        className="px-3 py-1 bg-gray-200 text-[#8B0029] rounded hover:bg-gray-300 flex items-center text-xs"
+        className="w-[120px] p-1 bg-gray-200 text-[#8B0029] rounded hover:bg-gray-300 flex items-center justify-center text-xl dark:bg-[#202838] dark:text-[#F8F2DE] dark:hover:bg-[#2d3748]"
+        title="Add new category"
       >
-        <span className="mr-1">+</span> Add New Category
+        +
       </button>
     </div>
   );

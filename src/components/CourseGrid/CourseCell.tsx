@@ -1,3 +1,4 @@
+// src/components/CourseGrid/CourseCell.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Course } from '../../types';
 import DynamicInput from '../Common/DynamicInput';
@@ -42,6 +43,18 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
   const [selectActive, setSelectActive] = useState(false);
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 });
   const cellRef = useRef<HTMLDivElement>(null);
+
+  // Get grade color based on grade value
+  const getGradeColor = (grade: string): string => {
+    if (!grade) return 'text-gray-600';
+    
+    if (grade === 'A+' || grade === 'P') return 'text-blue-600';
+    if (grade === 'A0') return 'text-green-600';
+    if (grade === 'B+') return 'text-yellow-600';
+    if (grade === 'B0') return 'text-orange-500';
+    if (grade === 'F') return 'text-red-600';
+    return 'text-orange-600'; // default for C+, C0, D+, D0, etc.
+  };
 
   // Initialize with course data if available
   useEffect(() => {
@@ -168,22 +181,28 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
     return (
       <>
         <div 
-          className="cell filled p-2 border border-transparent bg-transparent flex items-center overflow-hidden"
-          style={{ minHeight: '32px', height: '32px', visibility: 'hidden', maxWidth: '100%' }}
+          className="cell filled p-2 border border-gray-200 bg-gray-100 flex items-center overflow-hidden"
+          style={{ minHeight: '32px', height: '32px', maxWidth: '100%' }}
         >
           <div className="course-name-fade flex-grow pr-10">
-            <span className="font-bold text-xs whitespace-nowrap">{course?.name || 'Placeholder'}</span>
+            <span className="font-bold text-xs whitespace-nowrap">{course?.name || ''}</span>
           </div>
 
           <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center justify-end flex-shrink-0">
             <span className="text-xs text-gray-500">({course?.credits || 0})</span>
-            <span className="font-medium text-xs w-8 text-center">Grade</span>
+            {course?.grade && (
+              <span className={`font-medium text-xs ml-0 w-8 text-center ${getGradeColor(course.grade)}`}>
+                {course.grade.length === 1 && ['A', 'B', 'C', 'D'].includes(course.grade) 
+                  ? course.grade + '0' 
+                  : course.grade}
+              </span>
+            )}
           </div>
         </div>
         
         <div 
           ref={cellRef}
-          className="cell editing p-2 border border-[#8B0029] bg-white hover:bg-red-50 rounded fixed z-50" 
+          className="cell editing p-2 border border-[#8B0029] bg-white hover:bg-red-50 rounded fixed z-50 dark:bg-gray-700 dark:border-gray-600 dark:text-[#F8F2DE] dark:hover:bg-gray-600" 
           onBlurCapture={conditionallySubmitForm}
           style={{ 
             minHeight: '60px',
@@ -209,7 +228,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
                 onChange={(value) => setCredits(value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Cr."
-                className="w-1/3 p-0 border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none"
+                className="w-1/3 p-0 border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none dark:bg-gradient-to-r dark:from-[#9f1239]/20 dark:to-transparent dark:text-white dark:placeholder-gray-300"
                 step="1"
                 min="0"
               />
@@ -220,7 +239,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
                 onMouseDown={() => setSelectActive(true)}
                 onMouseUp={() => setTimeout(() => setSelectActive(false), 200)}
                 onBlur={() => setSelectActive(false)}
-                className="w-2/3 p-0 text-xs border-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent focus:ring-0 rounded-none"
+                className="w-2/3 p-0 text-xs border-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent focus:ring-0 rounded-none dark:bg-gradient-to-r dark:from-[#9f1239]/20 dark:to-transparent dark:text-white"
                 style={{ WebkitAppearance: 'menulist-button', appearance: 'menulist-button' }}
               >
                 <option value="">Grade</option>
@@ -230,6 +249,22 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
                   </option>
                 ))}
               </select>
+              {course && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm("Are you sure you want to delete this course?")) {
+                      onRemove(course.id);
+                      setIsEditing(false);
+                    }
+                  }}
+                  className="ml-1 text-red-500 hover:text-red-700 w-6 h-6 flex items-center justify-center"
+                  title="Delete course"
+                >
+                  ×
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -240,12 +275,12 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
   if (!course) {
     return (
       <div 
-        className="cell empty border-0 hover:border hover:border-[#8B0029] hover:bg-red-50 cursor-pointer text-center flex items-center justify-center group w-full"
+        className="cell empty border-0 hover:border hover:border-[#8B0029] hover:bg-red-50 cursor-pointer text-center flex items-center justify-center group w-full dark:hover:bg-[#202838] dark:hover:border-[#9f1239]"
         onClick={handleClick}
         style={{ height: '16px' }}
       >
         <div className="flex items-center justify-center w-full h-full">
-          <span className="text-lg leading-none text-[#8B0029] opacity-0 group-hover:opacity-100 transition-opacity duration-200">+</span>
+          <span className="text-lg leading-none text-[#8B0029] opacity-0 group-hover:opacity-100 transition-opacity duration-200 dark:text-[#F8F2DE]">+</span>
         </div>
       </div>
     );
@@ -253,7 +288,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
 
   return (
     <div 
-      className="cell filled p-2 border border-gray-200 hover:bg-gray-100 cursor-pointer relative flex items-center overflow-hidden"
+      className="cell filled p-2 border border-gray-200 bg-gray-100 hover:bg-gray-200 cursor-pointer relative flex items-center overflow-hidden dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 dark:text-white"
       onClick={handleClick}
       style={{ minHeight: '32px', height: '32px', maxWidth: '100%' }}
     >
@@ -266,12 +301,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
       <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center justify-end flex-shrink-0">
         <span className="text-xs text-gray-500">({course.credits})</span>
         {course.grade && (
-          <span className={`font-medium text-xs ml-0 w-8 text-center ${
-            course.grade === 'F' ? 'text-red-600' : 
-            course.grade === 'P' ? 'text-gray-600' :
-            course.grade.includes('0') ? 'text-blue-600' :
-            course.grade.includes('+') ? 'text-green-600' : 'text-blue-600'
-          }`}>
+          <span className={`font-medium text-xs ml-0 w-8 text-center ${getGradeColor(course.grade)}`}>
             {/* Apply A0, B0, C0, D0 format to displayed grade */}
             {course.grade.length === 1 && ['A', 'B', 'C', 'D'].includes(course.grade) 
               ? course.grade + '0' 

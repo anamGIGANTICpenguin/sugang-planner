@@ -1,3 +1,4 @@
+// src/components/CourseGrid/SemesterHeader.tsx
 import React, { useState } from 'react';
 import DynamicInput from '../Common/DynamicInput';
 
@@ -50,14 +51,14 @@ const SemesterHeader: React.FC<SemesterHeaderProps> = ({ name, onUpdate, onDelet
 
   if (isEditing) {
     return (
-      <div className="text-center p-2 bg-white">
+      <div className="text-center p-2 bg-white dark:bg-[#202838]">
         <DynamicInput
           type="text"
           value={semesterName}
           onChange={(value) => setSemesterName(value)}
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
-          className="w-full p-0 text-center font-semibold border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none"
+          className="w-full p-0 text-center font-semibold border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none dark:bg-[#202838] dark:text-[#F8F2DE] dark:focus:ring-0 dark:focus:outline-none"
           autoFocus
         />
       </div>
@@ -66,7 +67,7 @@ const SemesterHeader: React.FC<SemesterHeaderProps> = ({ name, onUpdate, onDelet
 
   return (
     <div 
-      className="text-center p-2 bg-gray-100 border-b-2 border-[#8B0029] font-semibold hover:bg-gray-200 cursor-pointer relative"
+      className="text-center p-2 bg-gray-100 border-b border-[#8B0029] font-semibold hover:bg-gray-200 cursor-pointer relative dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:border-[#9f1239] rounded-t-lg"
       onClick={handleClick}
       onMouseEnter={() => setShowDeleteButton(true)}
       onMouseLeave={() => setShowDeleteButton(false)}
@@ -76,7 +77,7 @@ const SemesterHeader: React.FC<SemesterHeaderProps> = ({ name, onUpdate, onDelet
       {showDeleteButton && (
         <button
           onClick={handleDelete}
-          className="absolute top-1 right-1 text-red-500 hover:text-red-700 text-xs bg-white rounded-full w-4 h-4 flex items-center justify-center shadow"
+          className="absolute top-1 right-1 text-red-500 hover:text-red-700 text-xs dark:text-[#F8F2DE] dark:hover:text-red-300 dark:bg-transparent dark:shadow-none"
           title="Delete semester"
         >
           ×
