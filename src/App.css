@@ -1,6 +1,7 @@
 /* src/App.css */
 /* Base styling for the app */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gugi&display=swap');
 @import "tailwindcss";
 
 /* Base styling for the app */
@@ -20,6 +21,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #333;
+}
+
+/* Gugi font class */
+.gugi-regular {
+  font-family: "Gugi", sans-serif;
+  font-weight: 400;
+  font-style: normal;
 }
 
 /* Course Grid styling */
@@ -42,6 +50,11 @@ body {
 .cell.empty {
   transition: background-color 0.2s;
   border-radius: 5px;
+  height: 100% !important; /* Force full height */
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Add some subtle effects for interactivity */
@@ -57,17 +70,26 @@ body {
 
 /* Cell editing styles */
 .cell.editing {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   transition: all 0.2s ease-in-out;
-  position: relative;
+  position: fixed;
   max-width: 250px;
   border-radius: 5px;
+  z-index: 1000;
+  background-color: var(--cell-bg-color, #fff);
+  isolation: isolate;
+}
+
+/* Add background color variable for dark mode */
+.dark .cell.editing {
+  --cell-bg-color: #1a1f2b;
 }
 
 /* Position the editing forms properly */
 .cell {
   position: relative;
   border-radius: 5px;
+  z-index: 1;
 }
 
 .cell.empty {
@@ -116,6 +138,63 @@ button,
   border-radius: 4px;
   overflow: hidden;
   position: relative;
+  transition: all 0.2s ease;
+  isolation: isolate;
+}
+
+/* Add a semi-transparent overlay that's invisible by default */
+.category-row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(139, 0, 41, 0); /* #8B0029 with 0 opacity */
+  transition: background-color 0.2s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* When hovering over any course cell in the row, show the highlight */
+.category-row:hover::before {
+  background-color: rgba(139, 0, 41, 0.1); /* Increased from 0.05 */
+}
+
+/* Dark mode version */
+.dark .category-row:hover::before {
+  background-color: rgba(159, 18, 57, 0.1); /* Increased from 0.05 */
+}
+
+/* Update draggable styles to only apply to category cell */
+.category-row > div > div:first-child {
+  cursor: default;
+}
+
+.category-row > div > div:first-child[draggable="true"] {
+  cursor: move;
+}
+
+/* Remove the old draggable styles for the entire row */
+.category-row[draggable="true"] {
+  cursor: default;
+}
+
+.category-row[draggable="true"]:hover {
+  background-color: transparent;
+}
+
+.dark .category-row[draggable="true"]:hover {
+  background-color: transparent;
+}
+
+.category-row[draggable="true"] {
+  cursor: move;
+}
+
+.category-row[draggable="true"]:hover {
+  background-color: rgba(139, 0, 41, 0.05);
+}
+
+.dark .category-row[draggable="true"]:hover {
+  background-color: rgba(159, 18, 57, 0.1);
 }
 
 /* Add a more visible horizontal separator */
@@ -156,4 +235,170 @@ button,
 .h-1.rounded-full.bg-red-200,
 .h-1.rounded-full.bg-white {
   background-color: #15803d !important; /* dark green (green-700) */
+}
+
+.tiger-logo {
+  display: block;
+  height: 250px;
+  width: auto;
+  margin: 0 auto 1rem;
+}
+
+/* Retake course styling */
+.retake-course {
+  position: relative;
+  isolation: isolate;
+}
+
+.retake-course::after,
+.retake-course::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.retake-course::before {
+  background: linear-gradient(to right top, 
+    transparent calc(50% - 0.5px), 
+    rgba(127, 23, 43, 0.7) calc(50% - 0.5px),
+    rgba(127, 23, 43, 0.7) calc(50% + 0.5px),
+    transparent calc(50% + 0.5px));
+}
+
+.retake-course::after {
+  background: linear-gradient(to left top, 
+    transparent calc(50% - 0.5px), 
+    rgba(127, 23, 43, 0.7) calc(50% - 0.5px),
+    rgba(127, 23, 43, 0.7) calc(50% + 0.5px),
+    transparent calc(50% + 0.5px));
+}
+
+.dark .retake-course::before,
+.dark .retake-course::after {
+  background: linear-gradient(to right top, 
+    transparent calc(50% - 0.5px),
+    rgba(159, 18, 57, 0.7) calc(50% - 0.5px),
+    rgba(159, 18, 57, 0.7) calc(50% + 0.5px),
+    transparent calc(50% + 0.5px));
+}
+
+.dark .retake-course::before {
+  background: linear-gradient(to right top, 
+    transparent calc(50% - 1.0px),
+    rgba(159, 18, 57, 0.7) calc(50% - 0.75px),
+    rgba(159, 18, 57, 0.7) calc(50% + 0.75px),
+    transparent calc(50% + 0.75px));
+}
+
+.dark .retake-course::after {
+  background: linear-gradient(to left top, 
+    transparent calc(50% - 1.0px),
+    rgba(159, 18, 57, 0.7) calc(50% - 0.75px),
+    rgba(159, 18, 57, 0.7) calc(50% + 0.75px),
+    transparent calc(50% + 0.75px));
+}
+
+/* Portal and popup styles */
+#portal-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+#portal-root * {
+  pointer-events: auto;
+}
+
+/* Condensed cell styles for 10+ semesters */
+.condensed-cells .cell.filled,
+.condensed-cells .cell.empty {
+  min-height: 24px !important; /* 25% reduction from 32px */
+  height: 24px !important;
+  padding: 0.25rem !important; /* Reduce padding */
+}
+
+.condensed-cells .cell.filled .font-bold,
+.condensed-cells .cell.filled .text-xs {
+  font-size: 0.65rem !important; /* 25% reduction from text-xs */
+  line-height: 1;
+}
+
+.condensed-cells .cell.filled .text-[10px] {
+  font-size: 0.6rem !important;
+}
+
+.condensed-cells .semester-cell {
+  min-height: 24px !important;
+}
+
+/* Condensed cell styles for 9+ semesters */
+.condensed-cells .cell.empty {
+  height: 100% !important; /* Force full height */
+  min-height: 24px !important;
+  padding: 0.25rem !important;
+}
+
+/* Ensure semester cells take full height */
+.semester-cell {
+  display: flex;
+  flex-direction: column;
+  min-height: 32px;
+  height: 100%;
+}
+
+.condensed-cells .semester-cell {
+  min-height: 24px;
+}
+
+/* Ensure the flex-grow container takes remaining space */
+.semester-cell > div:last-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Drop zone styles */
+.category-row {
+  transition: transform 0.2s ease;
+}
+
+.category-row[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.category-row[draggable="true"] > div > div:first-child:active {
+  cursor: grabbing;
+}
+
+/* Improve drop zone visibility */
+.h-2.transition-all {
+  margin: 0;
+  border-radius: 4px;
+  transform-origin: center;
+  transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, height, opacity;
+  border: 0;
+}
+
+.h-8.bg-\[\#8B0029\]\/10 {
+  background-color: rgba(139, 0, 41, 0.05);
+  transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .h-8.bg-\[\#8B0029\]\/10 {
+  background-color: rgba(159, 18, 57, 0.05);
+}
+
+/* Remove dark mode override since we're not using borders */
+.dark .h-8.bg-\[\#8B0029\]\/10 {
+  background-color: rgba(159, 18, 57, 0.05);
 }

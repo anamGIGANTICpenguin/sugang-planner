@@ -4,6 +4,7 @@ export interface Course {
   credits: number;
   grade?: string;
   gpaValue?: number | null; // GPA value for the grade, null for P/F courses
+  isRetake?: boolean; // Add this flag
 }
 
 export interface Category {
@@ -31,4 +32,5 @@ export interface CourseGridState {
   addCourse: (categoryId: string, semesterId: string, course: Omit<Course, 'id'>) => void;
   updateCourse: (categoryId: string, semesterId: string, courseId: string, updates: Partial<Omit<Course, 'id'>>) => void;
   removeCourse: (categoryId: string, semesterId: string, courseId: string) => void;
+  reorderCategories: (sourceIndex: number, destinationIndex: number) => void;
 }

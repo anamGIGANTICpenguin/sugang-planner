@@ -5,19 +5,19 @@ import ThemeToggle from './components/themeToggle';
 import { useCourseStore } from './store/courseStore';
 import { useThemeStore } from './store/themeStore';
 import './App.css';
+import tigerLogo from './assets/tigerlogo.svg'; // Import the tiger logo
+import GPAGraph from './components/Summary/GPAGraph';
+import CreditSummary from './components/Summary/CreditSummary';
 
 const App: React.FC = () => {
-  // Get theme data
-  const { darkMode } = useThemeStore();
+  // Always use dark mode
+  // const { darkMode } = useThemeStore();
+  const darkMode = true;
   
   // Apply dark mode class to body
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
+    document.documentElement.classList.add('dark');
+  }, []);
 
   // Get data for summary display in header
   const { categories, semesters } = useCourseStore();
@@ -63,48 +63,64 @@ const App: React.FC = () => {
   const overallCompletion = totalRequiredCredits > 0 ? (totalCompletedCredits / totalRequiredCredits) * 100 : 0;
 
   return (
-    <div className={`app min-h-screen ${darkMode ? 'bg-gray-900 text-[#F8F2DE]' : 'bg-[#F8F2DE]'}`}>
-      <header className={`${darkMode ? 'bg-[#4c0016]' : 'bg-[#8B0029]'} text-white p-4 shadow-md`}>
-        <div className="container mx-auto">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="flex items-center space-x-3">
-                <h1 className="text-2xl font-bold">호랭이 졸업길</h1>
-                <ThemeToggle />
-              </div>
-              <p className="text-red-100">어흥</p>
+    <div className="app min-h-screen bg-gray-900 text-[#F8F2DE]">
+      <header className="bg-[#8B0029] text-white p-4 shadow-md">
+        <div className="container mx-auto max-w-3xl px-4">
+          <div className="flex flex-col items-center text-center">
+            <img src={tigerLogo} alt="Tiger Logo" className="tiger-logo mb-2" />
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold gugi-regular">졸업하고싶은 호랭이</h1>
+              {/* Temporarily disabled theme toggle
+              <ThemeToggle />
+              */}
             </div>
-            <div className="text-white text-sm w-96">
-              <div className="mb-1">
-                <div className="flex justify-between items-center">
-                  <span>Overall Progress:</span>
+            <p className="text-lg font-bold gugi-regular">어흥</p>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto py-6 px-4 max-w-7xl">
+        <div className="bg-transparent mb-8">
+          <CourseGrid />
+        </div>
+
+        {/* Progress tracking section */}
+        <div className="max-w-2xl mx-auto bg-[#8B0029] text-white p-6 rounded-lg shadow-lg">
+          {/* Graph and credit summary side by side */}
+          <div className="flex gap-4">
+            <div className="w-3/5">
+              <GPAGraph />
+            </div>
+            <div className="w-2/5">
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-lg font-semibold">취득 학점:</span>
                   <span>{Math.round(totalCompletedCredits)}/{totalRequiredCredits} 학점 ({Math.round(overallCompletion)}%)</span>
                 </div>
-                <div className={`w-full ${darkMode ? 'bg-gray-700' : 'bg-green-100'} rounded-full h-1 mt-1`}>
+                <div className={`w-full ${darkMode ? 'bg-gray-700' : 'bg-green-100'} rounded-full h-2`}>
                   <div 
-                    className={`${darkMode ? 'bg-green-500' : 'bg-green-700'} h-1 rounded-full`} 
+                    className={`${darkMode ? 'bg-green-500' : 'bg-green-700'} h-2 rounded-full transition-all duration-500`} 
                     style={{ width: `${Math.min(100, overallCompletion)}%` }}
                   ></div>
                 </div>
               </div>
               
-              <div className="flex space-x-4 mb-1 mt-2">
-                <div className="flex items-center">
-                  <span>Overall GPA:</span>
-                  <span className="font-semibold ml-1">{overallGpa.toFixed(2)}</span>
+              <div className="flex justify-center space-x-8 mb-4">
+                <div className="text-center">
+                  <span className="block text-sm">총 GPA</span>
+                  <span className="text-2xl font-bold">{overallGpa.toFixed(2)}</span>
                 </div>
                 
                 {totalMajorGpaCredits > 0 && (
-                  <div className="flex items-center">
-                    <span>전공 GPA:</span>
-                    <span className="font-semibold ml-1">{majorGpa.toFixed(2)}</span>
+                  <div className="text-center">
+                    <span className="block text-sm">전공 GPA</span>
+                    <span className="text-2xl font-bold">{majorGpa.toFixed(2)}</span>
                   </div>
                 )}
               </div>
               
-              <div className="mt-1">
+              <div className="grid gap-3">
                 {categories.map(category => {
-                  // Calculate category stats
                   const totalCredits = semesters.reduce((sum, semester) => {
                     const semesterCourses = category.courses[semester.id] || [];
                     return sum + semesterCourses.reduce((total, course) => total + course.credits, 0);
@@ -115,23 +131,23 @@ const App: React.FC = () => {
                     : 0;
                     
                   return (
-                    <div key={category.id} className="mb-1">
-                      <div className="flex justify-between text-xs">
+                    <div key={category.id}>
+                      <div className="flex justify-between text-sm mb-1">
                         <div className="flex items-center">
                           {category.isMajor && (
-                            <span className="bg-white/20 text-white text-xs px-1 rounded mr-1">전공</span>
+                            <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded mr-2">전공</span>
                           )}
-                          <span className="truncate max-w-[180px]">{category.name}</span>
+                          <span>{category.name}</span>
                         </div>
                         <span>
                           {totalCredits}/{category.requiredCredits}
                         </span>
                       </div>
-                      <div className={`w-full ${darkMode ? 'bg-gray-700' : 'bg-green-100'} rounded-full h-1`}>
+                      <div className={`w-full ${darkMode ? 'bg-gray-700' : 'bg-green-100'} rounded-full h-1.5`}>
                         <div 
-                          className={`h-1 rounded-full ${
+                          className={`h-1.5 rounded-full ${
                             darkMode ? 'bg-green-500' : 'bg-green-700'
-                          }`}
+                          } transition-all duration-500`}
                           style={{ width: `${Math.min(100, completion)}%` }}
                         ></div>
                       </div>
@@ -142,15 +158,9 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
-      </header>
-
-      <main className="container mx-auto py-6 px-4 max-w-7xl">
-        <div className="bg-transparent">
-          <CourseGrid />
-        </div>
       </main>
 
-      <footer className={`${darkMode ? 'bg-gray-900' : 'bg-[#F8F2DE]'} py-6`}>
+      <footer className={`${darkMode ? 'bg-gray-900' : 'bg-[#F8F2DE]'} py-6 mt-8`}>
         <div className="container mx-auto px-4 text-center text-gray-600">
           <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>여러분의 졸업을 응원하는 호랭이 © {new Date().getFullYear()}</p>
         </div>

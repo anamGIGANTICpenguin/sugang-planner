@@ -10,8 +10,9 @@ type ThemeState = {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      darkMode: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches,
-      toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+      // Always return true for dark mode
+      darkMode: true,
+      toggleDarkMode: () => set((state) => ({ darkMode: true })),
     }),
     {
       name: 'theme-storage',

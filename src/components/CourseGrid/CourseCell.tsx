@@ -1,18 +1,7 @@
-// src/components/CourseGrid/CourseCell.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Course } from '../../types';
 import DynamicInput from '../Common/DynamicInput';
-
-// Helper function to calculate appropriate font size based on text length
-const calculateFontSize = (text: string, maxWidth: number): string => {
-  const baseSize = 0.75; // 0.75rem = 12px (text-xs)
-  const length = text.length;
-  
-  if (length <= 10) return `${baseSize}rem`; // Default size for short text
-  if (length <= 20) return `${baseSize * 0.9}rem`; // Slightly smaller
-  if (length <= 30) return `${baseSize * 0.8}rem`; // Even smaller
-  return `${baseSize * 0.7}rem`; // Smallest size for very long text
-};
+import Portal from '../Common/Portal';
 
 // Define grade options with their GPA values
 export const gradeOptions = [
@@ -28,18 +17,23 @@ export const gradeOptions = [
   { value: "P", label: "P (Pass)", gpaValue: null }, // Pass doesn't count in GPA
 ];
 
+const creditOptions = [1, 2, 3];
+
 interface CourseCellProps {
   course?: Course;
   onAdd: (course: Omit<Course, 'id'>) => void;
   onUpdate: (courseId: string, updates: Partial<Omit<Course, 'id'>>) => void;
   onRemove: (courseId: string) => void;
+  isAnyEditing: boolean;
+  onEditStateChange: (isEditing: boolean) => void;
 }
 
-const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemove }) => {
+const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemove, isAnyEditing, onEditStateChange }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [courseName, setCourseName] = useState('');
   const [credits, setCredits] = useState('');
   const [grade, setGrade] = useState('');
+  const [isRetake, setIsRetake] = useState(false);
   const [selectActive, setSelectActive] = useState(false);
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 });
   const cellRef = useRef<HTMLDivElement>(null);
@@ -48,7 +42,8 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
   const getGradeColor = (grade: string): string => {
     if (!grade) return 'text-gray-600';
     
-    if (grade === 'A+' || grade === 'P') return 'text-blue-600';
+    if (grade === 'A+') return 'text-[#4290f5]';
+    if (grade === 'P') return 'text-blue-600';
     if (grade === 'A0') return 'text-green-600';
     if (grade === 'B+') return 'text-yellow-600';
     if (grade === 'B0') return 'text-orange-500';
@@ -62,11 +57,13 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
       setCourseName(course.name || '');
       setCredits(course.credits?.toString() || '');
       setGrade(course.grade || '');
+      setIsRetake(course.isRetake || false);
     } else {
       // Clear fields for new empty cells
       setCourseName('');
-      setCredits('');
+      setCredits('');  // Initialize as empty string
       setGrade('');
+      setIsRetake(false);
     }
   }, [course]);
 
@@ -100,10 +97,10 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
   }, [isEditing, clickPosition]);
 
   const handleClick = (e: React.MouseEvent) => {
-    if (!isEditing) {
-      // Record the click position
+    if (!isEditing && !isAnyEditing) {
       setClickPosition({ x: e.clientX, y: e.clientY });
       setIsEditing(true);
+      onEditStateChange(true);
     }
   };
 
@@ -112,6 +109,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
       submitForm();
     } else if (e.key === 'Escape') {
       setIsEditing(false);
+      onEditStateChange(false);
     }
   };
 
@@ -147,15 +145,19 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
                            gradeOptions.find(option => option.value === grade);
       const gpaValue = selectedGrade ? selectedGrade.gpaValue : null;
       
+      // Force credits to 0 if it's a retake
+      const finalCredits = isRetake ? 0 : parsedCredits;
+
       if (course) {
         // Update existing course
         const updates: Partial<Omit<Course, 'id'>> = {};
         if (courseName !== course.name) updates.name = courseName;
-        if (parsedCredits !== course.credits) updates.credits = parsedCredits;
+        if (finalCredits !== course.credits) updates.credits = finalCredits;
         if (formattedGrade !== course.grade) {
           updates.grade = formattedGrade;
           updates.gpaValue = gpaValue;
         }
+        if (isRetake !== course.isRetake) updates.isRetake = isRetake;
         
         if (Object.keys(updates).length > 0) {
           onUpdate(course.id, updates);
@@ -164,9 +166,10 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
         // Add new course
         onAdd({
           name: courseName,
-          credits: parsedCredits,
+          credits: finalCredits,
           grade: formattedGrade || undefined,
           gpaValue: gpaValue,
+          isRetake: isRetake,
         });
       }
     } else if (course && courseName.trim() === '') {
@@ -175,13 +178,14 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
     }
     
     setIsEditing(false);
+    onEditStateChange(false);
   };
 
   if (isEditing) {
     return (
       <>
         <div 
-          className="cell filled p-2 border border-gray-200 bg-gray-100 flex items-center overflow-hidden"
+          className="cell filled p-2 border border-gray-200 bg-gray-100 flex items-center overflow-hidden dark:bg-gray-800 dark:border-gray-700"
           style={{ minHeight: '32px', height: '32px', maxWidth: '100%' }}
         >
           <div className="course-name-fade flex-grow pr-10">
@@ -200,55 +204,89 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
           </div>
         </div>
         
-        <div 
-          ref={cellRef}
-          className="cell editing p-2 border border-[#8B0029] bg-white hover:bg-red-50 rounded fixed z-50 dark:bg-gray-700 dark:border-gray-600 dark:text-[#F8F2DE] dark:hover:bg-gray-600" 
-          onBlurCapture={conditionallySubmitForm}
-          style={{ 
-            minHeight: '60px',
-            minWidth: '180px',
-            maxWidth: '250px',
-            position: 'fixed'
-          }}
-        >
-          <div className="flex flex-col gap-1">
-            <DynamicInput
-              type="text"
-              value={courseName}
-              onChange={(value) => setCourseName(value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Course name"
-              className="w-full p-0 border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none"
-              autoFocus
-            />
-            <div className="flex gap-1 mt-1">
+        <Portal>
+          <div 
+            ref={cellRef}
+            className="cell editing p-2 border border-[#8B0029] bg-gray-100 hover:bg-gray-100 rounded fixed z-[9999] dark:bg-gray-800 dark:border-gray-600 dark:text-[#F8F2DE] dark:hover:bg-gray-800" 
+            onBlurCapture={conditionallySubmitForm}
+            style={{ 
+              minHeight: '140px',
+              width: '160px',  // Changed from 200px to 160px (20% reduction)
+              position: 'fixed',
+              left: `${clickPosition.x - 20}px`,
+              top: `${clickPosition.y - 70}px`
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditing(false);
+                onEditStateChange(false);
+              }}
+              className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center rounded-full bg-[#8B0029] hover:bg-[#6d0020] text-white text-base leading-none font-normal dark:bg-[#9f1239] dark:hover:bg-[#881337]"
+              title="Close"
+              style={{ paddingBottom: '1px' }} // Fine-tune vertical alignment
+            >
+              ×
+            </button>
+            <div className="flex flex-col gap-3">
               <DynamicInput
-                type="number"
-                value={credits}
-                onChange={(value) => setCredits(value)}
+                type="text"
+                value={courseName}
+                onChange={(value) => setCourseName(value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Cr."
-                className="w-1/3 p-0 border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none dark:bg-gradient-to-r dark:from-[#9f1239]/20 dark:to-transparent dark:text-white dark:placeholder-gray-300"
-                step="1"
-                min="0"
+                placeholder="Course name"
+                className="w-full p-1 border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none"
+                autoFocus
               />
-              <select
-                value={grade}
-                onChange={(e) => setGrade(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onMouseDown={() => setSelectActive(true)}
-                onMouseUp={() => setTimeout(() => setSelectActive(false), 200)}
-                onBlur={() => setSelectActive(false)}
-                className="w-2/3 p-0 text-xs border-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent focus:ring-0 rounded-none dark:bg-gradient-to-r dark:from-[#9f1239]/20 dark:to-transparent dark:text-white"
-                style={{ WebkitAppearance: 'menulist-button', appearance: 'menulist-button' }}
-              >
-                <option value="">Grade</option>
-                {gradeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.value} {option.gpaValue !== null ? `(${option.gpaValue})` : ''}
-                  </option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  value={credits}
+                  onChange={(e) => setCredits(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-16 p-1 text-xs border-0 bg-transparent focus:ring-0 rounded-none dark:text-white"
+                  style={{ WebkitAppearance: 'menulist-button', appearance: 'menulist-button' }}
+                  disabled={isRetake}
+                >
+                  <option value="">학점</option>
+                  {creditOptions.map(credit => (
+                    <option key={credit} value={credit}>
+                      {credit}학점
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={grade}
+                  onChange={(e) => setGrade(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onMouseDown={() => setSelectActive(true)}
+                  onMouseUp={() => setTimeout(() => setSelectActive(false), 200)}
+                  onBlur={() => setSelectActive(false)}
+                  className="flex-1 p-1 text-xs border-0 bg-transparent focus:ring-0 rounded-none dark:text-white"
+                  style={{ WebkitAppearance: 'menulist-button', appearance: 'menulist-button' }}
+                >
+                  <option value="">Grade</option>
+                  {gradeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.value} {option.gpaValue !== null ? `(${option.gpaValue})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center">
+                <input 
+                  type="checkbox" 
+                  checked={isRetake}
+                  onChange={(e) => {
+                    setIsRetake(e.target.checked);
+                    if (e.target.checked) {
+                      setCredits('0');
+                    }
+                  }}
+                  className="mr-2 rounded border-gray-300"
+                />
+                <label className="text-xs">재수강 / 학점지우개</label>
+              </div>
               {course && (
                 <button
                   type="button"
@@ -257,17 +295,18 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
                     if (window.confirm("Are you sure you want to delete this course?")) {
                       onRemove(course.id);
                       setIsEditing(false);
+                      onEditStateChange(false);
                     }
                   }}
-                  className="ml-1 text-red-500 hover:text-red-700 w-6 h-6 flex items-center justify-center"
+                  className="w-full text-red-500 hover:text-red-700 text-xs py-1 mt-1 text-center border border-red-500 hover:bg-red-50 rounded"
                   title="Delete course"
                 >
-                  ×
+                  Delete Course
                 </button>
               )}
             </div>
           </div>
-        </div>
+        </Portal>
       </>
     );
   }
@@ -275,9 +314,21 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
   if (!course) {
     return (
       <div 
-        className="cell empty border-0 hover:border hover:border-[#8B0029] hover:bg-red-50 cursor-pointer text-center flex items-center justify-center group w-full dark:hover:bg-[#202838] dark:hover:border-[#9f1239]"
-        onClick={handleClick}
-        style={{ height: '16px' }}
+        className={`cell empty border-0 hover:border hover:border-[#8B0029] hover:bg-red-50 cursor-pointer text-center flex items-center justify-center group w-full h-full dark:hover:bg-[#202838] dark:hover:border-[#9f1239] ${
+          isAnyEditing ? 'pointer-events-none opacity-50' : ''
+        }`}
+        onClick={() => {
+          if (!isAnyEditing) {
+            onAdd({
+              name: "New Course",
+              credits: 3,
+              grade: undefined,
+              gpaValue: null,
+              isRetake: false
+            });
+          }
+        }}
+        style={{ minHeight: '32px', height: '100%' }}
       >
         <div className="flex items-center justify-center w-full h-full">
           <span className="text-lg leading-none text-[#8B0029] opacity-0 group-hover:opacity-100 transition-opacity duration-200 dark:text-[#F8F2DE]">+</span>
@@ -288,24 +339,29 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
 
   return (
     <div 
-      className="cell filled p-2 border border-gray-200 bg-gray-100 hover:bg-gray-200 cursor-pointer relative flex items-center overflow-hidden dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 dark:text-white"
+      className={`cell filled p-2 border border-gray-200 bg-gray-100 hover:bg-gray-200 cursor-pointer relative flex items-center dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 dark:text-white ${
+        course.isRetake ? 'retake-course' : ''
+      }`}
       onClick={handleClick}
       style={{ minHeight: '32px', height: '32px', maxWidth: '100%' }}
     >
-      <div className="course-name-fade flex-grow pr-10">
-        <span className="font-bold text-xs whitespace-nowrap" style={{ fontSize: calculateFontSize(course.name, 70) }}>
+      <div className="flex-grow pr-10">
+        <span className="font-bold text-xs whitespace-nowrap overflow-hidden overflow-ellipsis block">
           {course.name}
         </span>
       </div>
 
-      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center justify-end flex-shrink-0">
-        <span className="text-xs text-gray-500">({course.credits})</span>
+      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-baseline justify-end flex-shrink-0 bg-inherit gap-0.5">
+        {course.credits !== 3 && course.credits !== 0 && (
+          <span className="text-[10px] text-gray-500">({course.credits})</span>
+        )}
         {course.grade && (
-          <span className={`font-medium text-xs ml-0 w-8 text-center ${getGradeColor(course.grade)}`}>
-            {/* Apply A0, B0, C0, D0 format to displayed grade */}
-            {course.grade.length === 1 && ['A', 'B', 'C', 'D'].includes(course.grade) 
-              ? course.grade + '0' 
-              : course.grade}
+          <span className={`font-medium text-xs text-right ${getGradeColor(course.grade)}`}>
+            {course.grade === 'P' || course.grade === 'F'
+              ? <>{course.grade}<span className="invisible">0</span></>
+              : course.grade.length === 1 && ['A', 'B', 'C', 'D'].includes(course.grade)
+                ? course.grade + '0'
+                : course.grade}
           </span>
         )}
       </div>

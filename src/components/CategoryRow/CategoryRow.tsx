@@ -1,5 +1,5 @@
 // src/components/CategoryRow/CategoryRow.tsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, DragEvent } from 'react';
 import CourseCell from '../CourseGrid/CourseCell';
 import { Category, Course, Semester } from '../../types';
 import DynamicInput from '../Common/DynamicInput';
@@ -12,6 +12,11 @@ interface CategoryRowProps {
   addCourse: (categoryId: string, semesterId: string, course: Omit<Course, 'id'>) => void;
   updateCourse: (categoryId: string, semesterId: string, courseId: string, updates: Partial<Omit<Course, 'id'>>) => void;
   removeCourse: (categoryId: string, semesterId: string, courseId: string) => void;
+  isAnyEditing: boolean;
+  onEditStateChange: (isEditing: boolean) => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  isDragging: boolean;
 }
 
 const CategoryRow: React.FC<CategoryRowProps> = ({
@@ -22,6 +27,11 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
   addCourse,
   updateCourse,
   removeCourse,
+  isAnyEditing,
+  onEditStateChange,
+  onDragStart,
+  onDragEnd,
+  isDragging,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [categoryName, setCategoryName] = useState(category.name);
@@ -77,15 +87,23 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
   }, 0);
 
   return (
-    <div className="category-row border-b border-gray-300 last:border-b-0">
+    <div className={`category-row transition-all duration-200 ${
+      isDragging ? 'opacity-50' : ''
+    }`}>
       <div className="grid grid-cols-[120px_1fr] gap-1">
-        {/* Category name and required credits */}
+        {/* Make only the category cell draggable */}
         <div 
           className={`p-2 bg-gray-100 border-r-2 font-medium ${
-            isEditing ? 'bg-red-50 border-[#8B0029]' : 'border-[#8B0029] hover:bg-gray-200 cursor-pointer'
+            isEditing ? 'bg-red-50 border-[#8B0029]' : 'border-[#8B0029] hover:bg-gray-200 cursor-move'
           } dark:bg-gray-800 dark:text-white dark:border-[#9f1239] dark:hover:bg-gray-700`}
           onClick={isEditing ? undefined : handleCategoryClick}
           ref={categoryRef}
+          draggable={!isEditing}
+          onDragStart={(e: DragEvent) => {
+            e.dataTransfer.effectAllowed = 'move';
+            onDragStart();
+          }}
+          onDragEnd={onDragEnd}
         >
           {isEditing ? (
             <div className="flex flex-col gap-2" onBlurCapture={handleBlur}>
@@ -122,7 +140,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
             <div className="flex justify-between items-start">
               <div>
                 <div>{category.name}</div>
-                <div className="text-xs mt-1 text-[11px]">
+                <div className="text-xs mt-1 text-[11px] dark:text-gray-400">
                   {totalCredits}/{category.requiredCredits} 학점
                 </div>
                 {category.isMajor && (
@@ -147,7 +165,13 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
         </div>
 
         {/* Course cells for each semester */}
-        <div className={`grid grid-cols-${semesters.length} gap-1`} style={{ display: 'grid', gridTemplateColumns: `repeat(${semesters.length}, 1fr)` }}>
+        <div 
+          className="grid gap-1"
+          style={{ 
+            display: 'grid', 
+            gridTemplateColumns: `repeat(${semesters.length}, minmax(0, 1fr))` 
+          }}
+        >
           {semesters.map((semester) => {
             const courses = category.courses[semester.id] || [];
             
@@ -155,7 +179,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
             const isEmpty = courses.length === 0;
             
             return (
-              <div key={semester.id} className="semester-cell" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+              <div key={semester.id} className="semester-cell flex flex-col" style={{ maxWidth: '100%', minHeight: '32px', height: '100%' }}>
                 {courses.map((course) => (
                   <CourseCell
                     key={course.id}
@@ -163,33 +187,22 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                     onAdd={() => {}} // Not used for existing courses
                     onUpdate={(courseId, updates) => updateCourse(category.id, semester.id, courseId, updates)}
                     onRemove={() => removeCourse(category.id, semester.id, course.id)}
+                    isAnyEditing={isAnyEditing}
+                    onEditStateChange={onEditStateChange}
                   />
                 ))}
                 
-                {/* Empty cell to add a new course - larger if category is empty for this semester */}
-                {isEmpty ? (
-                  <div 
-                    className="cell empty border-0 hover:border hover:border-[#8B0029] hover:bg-red-50 cursor-pointer flex items-center justify-center group dark:hover:bg-[#202838] dark:hover:border-[#9f1239]"
-                    onClick={() => {
-                      // Set up temporary course and add it
-                      const newCourse = {
-                        name: "새 수업",
-                        credits: 3,
-                      };
-                      addCourse(category.id, semester.id, newCourse);
-                    }}
-                    style={{ height: '100%', width: '100%', minHeight: '80px' }}
-                  >
-                    <span className="text-xl text-[#8B0029] opacity-0 group-hover:opacity-100 transition-opacity duration-200 dark:text-[#F8F2DE]">+</span>
-                  </div>
-                ) : (
+                {/* Single empty cell that fills remaining space */}
+                <div className="flex-grow">
                   <CourseCell
                     key={`empty-${semester.id}-${category.id}`}
-                    onAdd={(newCourse) => addCourse(category.id, semester.id, newCourse)}
+                    onAdd={(newCourse) => !isAnyEditing && addCourse(category.id, semester.id, newCourse)}
                     onUpdate={(courseId, updates) => updateCourse(category.id, semester.id, courseId, updates)}
                     onRemove={(courseId) => removeCourse(category.id, semester.id, courseId)}
+                    isAnyEditing={isAnyEditing}
+                    onEditStateChange={onEditStateChange}
                   />
-                )}
+                </div>
               </div>
             );
           })}

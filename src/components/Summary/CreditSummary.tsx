@@ -49,9 +49,9 @@ const CreditSummary: React.FC = () => {
     : 0;
 
   return (
-    <div className="credit-summary bg-white/20 p-2 rounded-lg mb-0">
-      <div className="grid grid-cols-2 gap-4">
-        {/* Left column */}
+    <div className="credit-summary bg-white/20 p-2 rounded-lg mb-0 w-2/3">
+      <div className="grid grid-cols-1 gap-4">
+        {/* Overall progress and GPA */}
         <div>
           <div className="mb-3">
             <div className="flex justify-between mb-1">
@@ -74,7 +74,7 @@ const CreditSummary: React.FC = () => {
           </div>
         </div>
 
-        {/* Right column - Categories */}
+        {/* Categories */}
         <div className="space-y-2">
           {categorySummaries.map(summary => (
             <div key={summary.id} className="mb-1">

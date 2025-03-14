@@ -132,6 +132,16 @@ export const useCourseStore = create<CourseGridState>()(
             };
           }),
         })),
+      reorderCategories: (sourceIndex: number, destinationIndex: number) =>
+        set((state) => {
+          const newCategories = [...state.categories];
+          const [movedCategory] = newCategories.splice(sourceIndex, 1);
+          // If we're moving down, subtract 1 from the destination index
+          // because the source removal shifted all indices down
+          const adjustedDestIndex = sourceIndex < destinationIndex ? destinationIndex - 1 : destinationIndex;
+          newCategories.splice(adjustedDestIndex, 0, movedCategory);
+          return { categories: newCategories };
+        }),
     }),
     {
       name: 'course-planner-storage',
