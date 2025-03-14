@@ -6,6 +6,7 @@ import { useCourseStore } from './store/courseStore';
 //import { useThemeStore } from './store/themeStore';
 import './App.css';
 import tigerLogo from './assets/tigerlogo.svg'; // Import the tiger logo
+import cubadultImage from './assets/cubadult.png';
 import GPAGraph from './components/Summary/GPAGraph';
 //import CreditSummary from './components/Summary/CreditSummary';
 
@@ -160,9 +161,18 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <footer className={`${darkMode ? 'bg-gray-900' : 'bg-[#F8F2DE]'} py-6 mt-8`}>
-        <div className="container mx-auto px-4 text-center text-gray-600">
-          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>여러분의 졸업을 응원하는 호랭이 © {new Date().getFullYear()}</p>
+      <footer className={`${darkMode ? 'bg-gray-900' : 'bg-[#F8F2DE]'} py-6`}>
+        <div className="container mx-auto px-4 text-center">
+          <div className="mb-4">
+            <img 
+              src={cubadultImage} 
+              alt="Cub Adult" 
+              className="w-40 h-auto opacity-50 hover:opacity-100 transition-opacity duration-300 mx-auto"
+            />
+          </div>
+          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            여러분의 졸업을 응원하는 호랭이 © {new Date().getFullYear()}
+          </p>
         </div>
       </footer>
     </div>
