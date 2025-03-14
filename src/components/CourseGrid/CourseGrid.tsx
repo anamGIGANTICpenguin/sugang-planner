@@ -1,17 +1,15 @@
 // src/components/CourseGrid/CourseGrid.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import SemesterHeader from './SemesterHeader';
 import CategoryRow from '../CategoryRow/CategoryRow';
 import CategoryManager from '../CategoryRow/CategoryManager';
 import SemesterSummary from './SemesterSummary';
 import { useCourseStore } from '../../store/courseStore';
-import DynamicInput from '../Common/DynamicInput';
+//import DynamicInput from '../Common/DynamicInput';
 import DropZone from '../CategoryRow/DropZone';
 
 const CourseGrid: React.FC = () => {
   const [isAnyEditing, setIsAnyEditing] = useState(false);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);

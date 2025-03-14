@@ -1,13 +1,13 @@
 // src/App.tsx
 import React, { useEffect } from 'react';
 import CourseGrid from './components/CourseGrid/CourseGrid';
-import ThemeToggle from './components/themeToggle';
+//import ThemeToggle from './components/themeToggle';
 import { useCourseStore } from './store/courseStore';
-import { useThemeStore } from './store/themeStore';
+//import { useThemeStore } from './store/themeStore';
 import './App.css';
 import tigerLogo from './assets/tigerlogo.svg'; // Import the tiger logo
 import GPAGraph from './components/Summary/GPAGraph';
-import CreditSummary from './components/Summary/CreditSummary';
+//import CreditSummary from './components/Summary/CreditSummary';
 
 const App: React.FC = () => {
   // Always use dark mode

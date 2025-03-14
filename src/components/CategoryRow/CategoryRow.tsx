@@ -176,8 +176,6 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
             const courses = category.courses[semester.id] || [];
             
             // For each semester cell, we'll show existing courses and an empty cell for adding new ones
-            const isEmpty = courses.length === 0;
-            
             return (
               <div key={semester.id} className="semester-cell flex flex-col" style={{ maxWidth: '100%', minHeight: '32px', height: '100%' }}>
                 {courses.map((course) => (

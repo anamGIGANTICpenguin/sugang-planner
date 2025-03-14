@@ -12,7 +12,7 @@ export const useThemeStore = create<ThemeState>()(
     (set) => ({
       // Always return true for dark mode
       darkMode: true,
-      toggleDarkMode: () => set((state) => ({ darkMode: true })),
+      toggleDarkMode: () => set(() => ({ darkMode: true })),
     }),
     {
       name: 'theme-storage',
