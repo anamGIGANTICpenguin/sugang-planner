@@ -110,7 +110,7 @@ const CourseGrid: React.FC = () => {
         {/* Empty top-left cell with semester add button (invisible cell, visible button) */}
         <div className="p-2 relative bg-transparent border-0">
           <div 
-            className="text-center bg-white border border-[#8B0029] hover:bg-red-50 cursor-pointer text-[#8B0029] flex items-center justify-center rounded absolute top-1/2 right-2 transform -translate-y-1/2 dark:bg-[#202838] dark:border-[#9f1239] dark:text-[#F8F2DE] dark:hover:bg-[#2d3748]"
+            className="text-center bg-[#E5D0AC] border border-[#8B0029] hover:bg-[#d4bd94] cursor-pointer text-[#333333] flex items-center justify-center rounded absolute top-1/2 right-2 transform -translate-y-1/2 dark:bg-[#202838] dark:border-[#9f1239] dark:text-[#F8F2DE] dark:hover:bg-[#2d3748]"
             onClick={handleAddSemester}
             style={{ width: '25px', height: '25px' }}
             title="Add new semester"

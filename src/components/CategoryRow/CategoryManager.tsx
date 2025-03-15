@@ -105,7 +105,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ onAddCategory }) => {
     <div className="category-manager">
       <button
         onClick={handleAddClick}
-        className="w-full p-2 bg-gray-100 text-[#8B0029] rounded hover:bg-gray-200 flex items-center justify-center text-xl dark:bg-gray-800 dark:text-[#F8F2DE] dark:hover:bg-gray-700"
+        className="w-full p-2 bg-[#E5D0AC] text-[#333333] rounded hover:bg-[#d4bd94] flex items-center justify-center text-xl dark:bg-gray-800 dark:text-[#F8F2DE] dark:hover:bg-gray-700"
         title="Add new category"
       >
         +

@@ -1,5 +1,5 @@
 // src/App.tsx
-import React, { useEffect } from 'react';
+import React from 'react';
 import CourseGrid from './components/CourseGrid/CourseGrid';
 import { useCourseStore } from './store/courseStore';
 import './App.css';
@@ -8,14 +8,6 @@ import cubadultImage from './assets/cubadult.png';
 import GPAGraph from './components/Summary/GPAGraph';
 
 const App: React.FC = () => {
-  // Always use dark mode
-  const darkMode = true;
-  
-  // Apply dark mode class to body
-  useEffect(() => {
-    document.documentElement.classList.add('dark');
-  }, []);
-
   // Get data for summary display in header
   const { categories, semesters } = useCourseStore();
 
@@ -60,7 +52,7 @@ const App: React.FC = () => {
   const overallCompletion = totalRequiredCredits > 0 ? (totalCompletedCredits / totalRequiredCredits) * 100 : 0;
 
   return (
-    <div className="app min-h-screen bg-gray-900 text-[#F8F2DE]">
+    <div className="app min-h-screen bg-[#FEF9E1] dark:bg-gray-900 text-[#333333] dark:text-[#F8F2DE]">
       <header className="bg-[#8B0029] text-white p-4 shadow-md">
         <div className="container mx-auto max-w-3xl px-4">
           <div className="flex flex-col items-center text-center">
@@ -73,13 +65,13 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="container mx-auto py-6 px-4 max-w-7xl">
-        <div className="bg-transparent mb-8">
+      <main className="container mx-auto py-6 px-4 max-w-7xl overflow-x-auto">
+        <div className="min-w-[800px] bg-transparent mb-8"> {/* Add min-width wrapper */}
           <CourseGrid />
         </div>
 
         {/* Progress tracking section */}
-        <div className="max-w-2xl mx-auto bg-[#8B0029] text-white p-6 rounded-lg shadow-lg">
+        <div className="min-w-[800px] max-w-2xl mx-auto bg-[#8B0029] text-white p-6 rounded-lg shadow-lg"> {/* Add min-width */}
           {/* Graph and credit summary side by side */}
           <div className="flex gap-4">
             <div className="w-3/5">
@@ -91,9 +83,9 @@ const App: React.FC = () => {
                   <span className="text-lg font-semibold">취득 학점:</span>
                   <span>{Math.round(totalCompletedCredits)}/{totalRequiredCredits} 학점 ({Math.round(overallCompletion)}%)</span>
                 </div>
-                <div className={`w-full ${darkMode ? 'bg-gray-700' : 'bg-green-100'} rounded-full h-2`}>
+                <div className={`w-full bg-gray-700 rounded-full h-2`}>
                   <div 
-                    className={`${darkMode ? 'bg-green-500' : 'bg-green-700'} h-2 rounded-full transition-all duration-500`} 
+                    className={`bg-green-500 h-2 rounded-full transition-all duration-500`} 
                     style={{ width: `${Math.min(100, overallCompletion)}%` }}
                   ></div>
                 </div>
@@ -137,11 +129,9 @@ const App: React.FC = () => {
                           {totalCredits}/{category.requiredCredits}
                         </span>
                       </div>
-                      <div className={`w-full ${darkMode ? 'bg-gray-700' : 'bg-green-100'} rounded-full h-1.5`}>
+                      <div className={`w-full bg-gray-700 rounded-full h-1.5`}>
                         <div 
-                          className={`h-1.5 rounded-full ${
-                            darkMode ? 'bg-green-500' : 'bg-green-700'
-                          } transition-all duration-500`}
+                          className={`h-1.5 rounded-full bg-green-500 transition-all duration-500`}
                           style={{ width: `${Math.min(100, completion)}%` }}
                         ></div>
                       </div>
@@ -154,7 +144,7 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <footer className={`${darkMode ? 'bg-gray-900' : 'bg-[#F8F2DE]'} py-6`}>
+      <footer className="bg-[#FEF9E1] dark:bg-gray-900 py-6">
         <div className="container mx-auto px-4 text-center">
           <div className="mb-4">
             <img 
@@ -163,7 +153,7 @@ const App: React.FC = () => {
               className="w-40 h-auto opacity-50 hover:opacity-100 transition-opacity duration-300 mx-auto"
             />
           </div>
-          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className="text-xs text-gray-400">
             여러분의 졸업을 응원하는 호랭이 © {new Date().getFullYear()}
           </p>
         </div>

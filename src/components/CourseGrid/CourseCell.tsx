@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Course } from '../../types';
 import DynamicInput from '../Common/DynamicInput';
-import Portal from '../Common/Portal';
 
 // Define grade options with their GPA values
 export const gradeOptions = [
@@ -17,7 +16,8 @@ export const gradeOptions = [
   { value: "P", label: "P (Pass)", gpaValue: null }, // Pass doesn't count in GPA
 ];
 
-const creditOptions = [1, 2, 3];
+// Update the credit options array
+const creditOptions = [0.5, 1, 2, 3, 4, 5, 6];
 
 interface CourseCellProps {
   course?: Course;
@@ -183,138 +183,109 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
 
   if (isEditing) {
     return (
-      <>
-        <div 
-          className="cell filled p-2 border border-gray-200 bg-gray-100 flex items-center overflow-hidden dark:bg-gray-800 dark:border-gray-700"
-          style={{ minHeight: '32px', height: '32px', maxWidth: '100%' }}
-        >
-          <div className="course-name-fade flex-grow pr-10">
-            <span className="font-bold text-xs whitespace-nowrap">{course?.name || ''}</span>
-          </div>
-
-          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center justify-end flex-shrink-0">
-            <span className="text-xs text-gray-500">({course?.credits || 0})</span>
-            {course?.grade && (
-              <span className={`font-medium text-xs ml-0 w-8 text-center ${getGradeColor(course.grade)}`}>
-                {course.grade.length === 1 && ['A', 'B', 'C', 'D'].includes(course.grade) 
-                  ? course.grade + '0' 
-                  : course.grade}
-              </span>
-            )}
-          </div>
-        </div>
-        
-        <Portal>
-          <div 
-            ref={cellRef}
-            className="cell editing p-2 border border-[#8B0029] bg-gray-100 hover:bg-gray-100 rounded fixed z-[9999] dark:bg-gray-800 dark:border-gray-600 dark:text-[#F8F2DE] dark:hover:bg-gray-800" 
-            onBlurCapture={conditionallySubmitForm}
-            style={{ 
-              minHeight: '140px',
-              width: '160px',  // Changed from 200px to 160px (20% reduction)
-              position: 'fixed',
-              left: `${clickPosition.x - 20}px`,
-              top: `${clickPosition.y - 70}px`
+      <div 
+        className={`cell editing p-2 border border-[#8B0029] bg-[#E5D0AC] hover:bg-[#d4bd94] rounded-lg 
+          transition-all duration-300 ease-in-out origin-top dark:bg-gray-800 dark:border-[#9f1239] dark:text-[#F8F2DE] dark:hover:bg-gray-700`}
+        style={{ 
+          minHeight: '160px', // Increased height to accommodate vertical layout
+          zIndex: 10,
+          position: 'relative'
+        }}
+      >
+        <div className="flex flex-col gap-2" onClick={e => e.stopPropagation()}>
+          <DynamicInput
+            type="text"
+            value={courseName}
+            onChange={(value) => setCourseName(value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Course name"
+            className="w-full p-1 border-0 focus:border-0 focus:ring-0 from-[#8B0029]/5 to-transparent text-xs rounded-none"
+            autoFocus
+          />
+          <select
+            value={credits}
+            onChange={(e) => {
+              e.stopPropagation();
+              setCredits(e.target.value);
             }}
+            onKeyDown={handleKeyDown}
+            className="w-full p-1 text-xs border-0 bg-transparent focus:ring-0 rounded-none dark:text-white"
+            style={{ WebkitAppearance: 'menulist-button', appearance: 'menulist-button' }}
+            disabled={isRetake}
           >
+            <option value="">학점</option>
+            {creditOptions.map(credit => (
+              <option key={credit} value={credit}>
+                {credit}학점
+              </option>
+            ))}
+          </select>
+          <select
+            value={grade}
+            onChange={(e) => {
+              e.stopPropagation();
+              setGrade(e.target.value);
+            }}
+            onKeyDown={handleKeyDown}
+            className="w-full p-1 text-xs border-0 bg-transparent focus:ring-0 rounded-none dark:text-white"
+            style={{ WebkitAppearance: 'menulist-button', appearance: 'menulist-button' }}
+          >
+            <option value="">Grade</option>
+            {gradeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.value} {option.gpaValue !== null ? `(${option.gpaValue})` : ''}
+              </option>
+            ))}
+          </select>
+          <div className="flex items-center" onClick={e => e.stopPropagation()}>
+            <input 
+              type="checkbox" 
+              checked={isRetake}
+              onChange={(e) => {
+                e.stopPropagation();
+                setIsRetake(e.target.checked);
+                if (e.target.checked) setCredits('0');
+              }}
+              className="mr-2 rounded border-gray-300"
+            />
+            <label className="text-xs select-none">재수강/학점지우개</label>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              submitForm();
+            }}
+            className="w-full text-[#8B0029] hover:text-[#6d0020] text-xs py-1 text-center border border-[#8B0029] hover:bg-[#8B0029]/10 rounded dark:text-[#F8F2DE] dark:border-[#F8F2DE] dark:hover:bg-[#F8F2DE]/10"
+          >
+            Done
+          </button>
+          {course && (
             <button
               type="button"
-              onClick={() => {
-                setIsEditing(false);
-                onEditStateChange(false);
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm("Are you sure you want to delete this course?")) {
+                  onRemove(course.id);
+                  setIsEditing(false);
+                  onEditStateChange(false);
+                }
               }}
-              className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center rounded-full bg-[#8B0029] hover:bg-[#6d0020] text-white text-base leading-none font-normal dark:bg-[#9f1239] dark:hover:bg-[#881337]"
-              title="Close"
-              style={{ paddingBottom: '1px' }} // Fine-tune vertical alignment
+              className="w-full text-red-500 hover:text-red-700 text-xs py-1 text-center border border-red-500 hover:bg-red-50 rounded"
+              title="Delete course"
             >
-              ×
+              Delete
             </button>
-            <div className="flex flex-col gap-3">
-              <DynamicInput
-                type="text"
-                value={courseName}
-                onChange={(value) => setCourseName(value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Course name"
-                className="w-full p-1 border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none"
-                autoFocus
-              />
-              <div className="flex gap-2">
-                <select
-                  value={credits}
-                  onChange={(e) => setCredits(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="w-16 p-1 text-xs border-0 bg-transparent focus:ring-0 rounded-none dark:text-white"
-                  style={{ WebkitAppearance: 'menulist-button', appearance: 'menulist-button' }}
-                  disabled={isRetake}
-                >
-                  <option value="">학점</option>
-                  {creditOptions.map(credit => (
-                    <option key={credit} value={credit}>
-                      {credit}학점
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={grade}
-                  onChange={(e) => setGrade(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  onMouseDown={() => setSelectActive(true)}
-                  onMouseUp={() => setTimeout(() => setSelectActive(false), 200)}
-                  onBlur={() => setSelectActive(false)}
-                  className="flex-1 p-1 text-xs border-0 bg-transparent focus:ring-0 rounded-none dark:text-white"
-                  style={{ WebkitAppearance: 'menulist-button', appearance: 'menulist-button' }}
-                >
-                  <option value="">Grade</option>
-                  {gradeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.value} {option.gpaValue !== null ? `(${option.gpaValue})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-center">
-                <input 
-                  type="checkbox" 
-                  checked={isRetake}
-                  onChange={(e) => {
-                    setIsRetake(e.target.checked);
-                    if (e.target.checked) {
-                      setCredits('0');
-                    }
-                  }}
-                  className="mr-2 rounded border-gray-300"
-                />
-                <label className="text-xs">재수강 / 학점지우개</label>
-              </div>
-              {course && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (window.confirm("Are you sure you want to delete this course?")) {
-                      onRemove(course.id);
-                      setIsEditing(false);
-                      onEditStateChange(false);
-                    }
-                  }}
-                  className="w-full text-red-500 hover:text-red-700 text-xs py-1 mt-1 text-center border border-red-500 hover:bg-red-50 rounded"
-                  title="Delete course"
-                >
-                  Delete Course
-                </button>
-              )}
-            </div>
-          </div>
-        </Portal>
-      </>
+          )}
+        </div>
+      </div>
     );
   }
 
   if (!course) {
     return (
       <div 
-        className={`cell empty border-0 hover:border hover:border-[#8B0029] hover:bg-red-50 cursor-pointer text-center flex items-center justify-center group w-full h-full dark:hover:bg-[#202838] dark:hover:border-[#9f1239] ${
+        className={`cell empty border-0 hover:border hover:border-[#8B0029] hover:bg-[#E5D0AC] cursor-pointer text-center flex items-center justify-center group w-full h-full dark:hover:bg-[#202838] dark:hover:border-[#9f1239] ${
           isAnyEditing ? 'pointer-events-none opacity-50' : ''
         }`}
         onClick={() => {
@@ -339,21 +310,21 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
 
   return (
     <div 
-      className={`cell filled p-2 border border-gray-200 bg-gray-100 hover:bg-gray-200 cursor-pointer relative flex items-center dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 dark:text-white ${
+      className={`cell filled p-2 border border-gray-200 bg-[#E5D0AC] hover:bg-[#d4bd94] cursor-pointer relative flex items-center dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 dark:text-white ${
         course.isRetake ? 'retake-course' : ''
       }`}
       onClick={handleClick}
       style={{ minHeight: '32px', height: '32px', maxWidth: '100%' }}
     >
       <div className="flex-grow pr-10">
-        <span className="font-bold text-xs whitespace-nowrap overflow-hidden overflow-ellipsis block">
+        <span className="font-bold text-xs text-[#333333] whitespace-nowrap overflow-hidden overflow-ellipsis block dark:text-white">
           {course.name}
         </span>
       </div>
 
       <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-baseline justify-end flex-shrink-0 bg-inherit gap-0.5">
         {course.credits !== 3 && course.credits !== 0 && (
-          <span className="text-[10px] text-gray-500">({course.credits})</span>
+          <span className="text-[10px] text-[#333333] dark:text-gray-500">({course.credits})</span>
         )}
         {course.grade && (
           <span className={`font-medium text-xs text-right ${getGradeColor(course.grade)}`}>

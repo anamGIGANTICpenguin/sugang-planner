@@ -26,11 +26,11 @@ const SemesterSummary: React.FC<SemesterSummaryProps> = ({ categories, semester 
   const semesterGpa = totalGpaCredits > 0 ? totalGpaPoints / totalGpaCredits : 0;
 
   return (
-    <div className="flex flex-col justify-center py-1 px-1 bg-gray-100 text-center border-t border-[#8B0029]/20 dark:bg-gray-800 dark:border-[#9f1239]/20" style={{ minHeight: '40px' }}>
-      <div className="text-xs dark:text-white">
+    <div className="flex flex-col justify-center py-1 px-1 bg-[#E5D0AC] text-center border-t border-[#8B0029]/20 dark:bg-gray-800 dark:border-[#9f1239]/20" style={{ minHeight: '40px' }}>
+      <div className="text-xs text-[#333333] dark:text-white">
         {totalGpaCredits > 0 ? semesterGpa.toFixed(2) : 'N/A'}
       </div>
-      <div className="text-xs font-medium dark:text-white">
+      <div className="text-xs font-medium text-[#333333] dark:text-white">
         {totalCredits} 학점
       </div>
     </div>

@@ -10,9 +10,8 @@ type ThemeState = {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      // Always return true for dark mode
-      darkMode: true,
-      toggleDarkMode: () => set(() => ({ darkMode: true })),
+      darkMode: false,
+      toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
     }),
     {
       name: 'theme-storage',

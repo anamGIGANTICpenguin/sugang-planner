@@ -93,8 +93,8 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
       <div className="grid grid-cols-[120px_1fr] gap-1">
         {/* Make only the category cell draggable */}
         <div 
-          className={`p-2 bg-gray-100 border-r-2 font-medium ${
-            isEditing ? 'bg-red-50 border-[#8B0029]' : 'border-[#8B0029] hover:bg-gray-200 cursor-move'
+          className={`p-2 bg-[#E5D0AC] border-r-2 font-medium ${
+            isEditing ? 'bg-red-50 border-[#8B0029]' : 'border-[#8B0029] hover:bg-[#d4bd94] cursor-move'
           } dark:bg-gray-800 dark:text-white dark:border-[#9f1239] dark:hover:bg-gray-700`}
           onClick={isEditing ? undefined : handleCategoryClick}
           ref={categoryRef}
@@ -113,7 +113,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                 onChange={(value) => setCategoryName(value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Category name"
-                className="w-full p-0 border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none"
+                className="w-full p-0 border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none text-[#333333] dark:text-white"
                 autoFocus
               />
               <DynamicInput
@@ -122,7 +122,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                 onChange={(value) => setRequiredCredits(value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Required credits"
-                className="w-20 p-0 border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none"
+                className="w-20 p-0 border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none text-[#333333] dark:text-white"
                 min="0"
                 step="1"
               />
@@ -133,14 +133,14 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                   onChange={(e) => setIsMajor(e.target.checked)}
                   className="mr-2 rounded border-gray-300"
                 />
-                <label className="text-xs">전공 (Major)</label>
+                <label className="text-xs text-[#333333] dark:text-white">전공 (Major)</label>
               </div>
             </div>
           ) : (
             <div className="flex justify-between items-start">
               <div>
-                <div>{category.name}</div>
-                <div className="text-xs mt-1 text-[11px] dark:text-gray-400">
+                <div className="text-[#333333] dark:text-white">{category.name}</div>
+                <div className="text-xs mt-1 text-[#333333] dark:text-gray-400">
                   {totalCredits}/{category.requiredCredits} 학점
                 </div>
                 {category.isMajor && (
@@ -156,7 +156,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                     removeCategory(category.id);
                   }
                 }}
-                className="text-gray-400 hover:text-red-600 ml-2 p-1"
+                className="text-[#8B0029] hover:text-red-600 ml-2 p-1 dark:text-gray-400 dark:hover:text-red-300"
               >
                 <span className="text-sm">×</span>
               </button>
