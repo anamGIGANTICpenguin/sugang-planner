@@ -34,7 +34,6 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
   const [credits, setCredits] = useState('');
   const [grade, setGrade] = useState('');
   const [isRetake, setIsRetake] = useState(false);
-  const [selectActive, setSelectActive] = useState(false);
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 });
   const cellRef = useRef<HTMLDivElement>(null);
 
@@ -110,17 +109,6 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
     } else if (e.key === 'Escape') {
       setIsEditing(false);
       onEditStateChange(false);
-    }
-  };
-
-  // We won't use a standard blur handler
-  const conditionallySubmitForm = (e: React.FocusEvent) => {
-    // Don't submit if we're interacting with the select dropdown
-    if (selectActive) return;
-    
-    // Check if the focus is moving outside our cell container
-    if (!cellRef.current?.contains(e.relatedTarget as Node)) {
-      submitForm();
     }
   };
 
