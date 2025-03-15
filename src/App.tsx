@@ -1,18 +1,14 @@
 // src/App.tsx
 import React, { useEffect } from 'react';
 import CourseGrid from './components/CourseGrid/CourseGrid';
-//import ThemeToggle from './components/themeToggle';
 import { useCourseStore } from './store/courseStore';
-//import { useThemeStore } from './store/themeStore';
 import './App.css';
 import tigerLogo from './assets/tigerlogo.svg'; // Import the tiger logo
 import cubadultImage from './assets/cubadult.png';
 import GPAGraph from './components/Summary/GPAGraph';
-//import CreditSummary from './components/Summary/CreditSummary';
 
 const App: React.FC = () => {
   // Always use dark mode
-  // const { darkMode } = useThemeStore();
   const darkMode = true;
   
   // Apply dark mode class to body
@@ -71,9 +67,6 @@ const App: React.FC = () => {
             <img src={tigerLogo} alt="Tiger Logo" className="tiger-logo mb-2" />
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold gugi-regular">졸업하고싶은 호랭이</h1>
-              {/* Temporarily disabled theme toggle
-              <ThemeToggle />
-              */}
             </div>
             <p className="text-lg font-bold gugi-regular">어흥</p>
           </div>

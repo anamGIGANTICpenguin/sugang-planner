@@ -108,13 +108,14 @@ body {
   font-size: 0.75rem;
 }
 
-/* Improve focus styles for accessibility */
+/* Override input focus styles */
 input:focus, 
 button:focus,
 select:focus {
-  outline: 1px solid #8B0029;
-  outline-offset: 1px;
-  box-shadow: 0 0 0 2px rgba(139, 0, 41, 0.1);
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+  border-color: rgba(159, 18, 57, 0.5);
 }
 
 /* Responsive adjustments */
@@ -226,9 +227,9 @@ button,
   border-bottom: none !important;
 }
 
-/* Style progress bars and their backgrounds */
+/* Remove light mode styles for progress bars */
 .bg-white\/30.rounded-full {
-  background-color: #dcfce7 !important; /* green-100, bright green background */
+  background-color: rgba(20, 184, 166, 0.1) !important;
 }
 
 .h-1.rounded-full.bg-green-300,
