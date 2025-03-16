@@ -6,6 +6,7 @@ import './App.css';
 import tigerLogo from './assets/tigerlogo.svg'; // Import the tiger logo
 import cubadultImage from './assets/cubadult.png';
 import GPAGraph from './components/Summary/GPAGraph';
+import Instructions from './components/Common/Instructions';
 
 const App: React.FC = () => {
   // Get data for summary display in header
@@ -27,11 +28,15 @@ const App: React.FC = () => {
   let totalGpaPoints = 0;
   let totalMajorGpaCredits = 0;
   let totalMajorGpaPoints = 0;
+  let englishCourseCount = 0;
   
   categories.forEach(category => {
     semesters.forEach(semester => {
       const semesterCourses = category.courses[semester.id] || [];
       semesterCourses.forEach(course => {
+        if (course.isEnglish && !course.isRetake) {  // Only count if not retaken
+          englishCourseCount++;
+        }
         if (course.gpaValue !== null && course.grade && course.grade !== 'P') {
           // Overall GPA
           totalGpaCredits += course.credits;
@@ -66,6 +71,7 @@ const App: React.FC = () => {
       </header>
 
       <main className="container mx-auto py-6 px-4 max-w-7xl overflow-x-auto">
+        <Instructions />
         <div className="min-w-[800px] bg-transparent mb-8"> {/* Add min-width wrapper */}
           <CourseGrid />
         </div>
@@ -103,6 +109,11 @@ const App: React.FC = () => {
                     <span className="text-2xl font-bold">{majorGpa.toFixed(2)}</span>
                   </div>
                 )}
+
+                <div className="text-center">
+                  <span className="block text-sm">영강</span>
+                  <span className="text-2xl font-bold">{englishCourseCount}개</span>
+                </div>
               </div>
               
               <div className="grid gap-3">

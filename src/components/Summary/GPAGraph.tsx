@@ -64,13 +64,15 @@ const GPAGraph: React.FC = () => {
         borderColor: '#10b981',
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
         tension: 0.4,
+        borderWidth: 1.5,
       },
       {
         label: '전공 GPA',
         data: semesterGPAs.map(gpa => gpa.major),
-        borderColor: '#f43f5e',
-        backgroundColor: 'rgba(244, 63, 94, 0.1)',
+        borderColor: '#E5D0AC',
+        backgroundColor: 'rgba(229, 208, 172, 0.1)',
         tension: 0.4,
+        borderWidth: 2, // Made thicker than the total GPA line
       }
     ]
   };

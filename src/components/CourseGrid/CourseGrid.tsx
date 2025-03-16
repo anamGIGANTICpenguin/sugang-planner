@@ -103,7 +103,7 @@ const CourseGrid: React.FC = () => {
   return (
     <div 
       ref={gridRef}
-      className={`course-grid p-4 ${semesters.length >= 9 ? 'condensed-cells' : ''}`}
+      className={`course-grid p-4 ${semesters.length >= 6 ? 'condensed-cells' : ''}`}
       onDragOver={handleDragOver}
     >
       <div className="grid grid-cols-[120px_1fr] gap-1 mb-4 relative">

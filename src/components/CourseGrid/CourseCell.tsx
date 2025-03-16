@@ -1,23 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Course } from '../../types';
 import DynamicInput from '../Common/DynamicInput';
+import CustomDropdown from '../Common/CustomDropdown';
 
-// Define grade options with their GPA values
+// Update gradeOptions to include colors
 export const gradeOptions = [
-  { value: "A+", label: "A+ (4.5)", gpaValue: 4.5 },
-  { value: "A0", label: "A0 (4.0)", gpaValue: 4.0 },
-  { value: "B+", label: "B+ (3.5)", gpaValue: 3.5 },
-  { value: "B0", label: "B0 (3.0)", gpaValue: 3.0 },
-  { value: "C+", label: "C+ (2.5)", gpaValue: 2.5 },
-  { value: "C0", label: "C0 (2.0)", gpaValue: 2.0 },
-  { value: "D+", label: "D+ (1.5)", gpaValue: 1.5 },
-  { value: "D0", label: "D0 (1.0)", gpaValue: 1.0 },
-  { value: "F", label: "F (0.0)", gpaValue: 0.0 },  // Always counts in GPA
-  { value: "P", label: "P (Pass)", gpaValue: null }, // Pass doesn't count in GPA
+  { value: "A+", label: "A+ (4.5)", gpaValue: 4.5, color: '#4290f5' },
+  { value: "A0", label: "A0 (4.0)", gpaValue: 4.0, color: '#15803d' },
+  { value: "B+", label: "B+ (3.5)", gpaValue: 3.5, color: '#ca8a04' },
+  { value: "B0", label: "B0 (3.0)", gpaValue: 3.0, color: '#ea580c' },
+  { value: "C+", label: "C+ (2.5)", gpaValue: 2.5, color: '#ea580c' },
+  { value: "C0", label: "C0 (2.0)", gpaValue: 2.0, color: '#ea580c' },
+  { value: "D+", label: "D+ (1.5)", gpaValue: 1.5, color: '#ea580c' },
+  { value: "D0", label: "D0 (1.0)", gpaValue: 1.0, color: '#ea580c' },
+  { value: "F", label: "F (0.0)", gpaValue: 0.0, color: '#dc2626' },
+  { value: "P", label: "P (Pass)", gpaValue: null, color: '#2563eb' },
 ];
 
 // Update the credit options array
 const creditOptions = [0.5, 1, 2, 3, 4, 5, 6];
+
+// Create creditOptions array for the dropdown
+const creditDropdownOptions = creditOptions.map(credit => ({
+  value: credit.toString(),
+  label: `${credit}학점`
+}));
 
 interface CourseCellProps {
   course?: Course;
@@ -34,6 +41,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
   const [credits, setCredits] = useState('');
   const [grade, setGrade] = useState('');
   const [isRetake, setIsRetake] = useState(false);
+  const [isEnglish, setIsEnglish] = useState(false);
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 });
   const cellRef = useRef<HTMLDivElement>(null);
 
@@ -57,12 +65,14 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
       setCredits(course.credits?.toString() || '');
       setGrade(course.grade || '');
       setIsRetake(course.isRetake || false);
+      setIsEnglish(course.isEnglish || false);
     } else {
       // Clear fields for new empty cells
       setCourseName('');
       setCredits('');  // Initialize as empty string
       setGrade('');
       setIsRetake(false);
+      setIsEnglish(false);
     }
   }, [course]);
 
@@ -146,6 +156,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
           updates.gpaValue = gpaValue;
         }
         if (isRetake !== course.isRetake) updates.isRetake = isRetake;
+        if (isEnglish !== course.isEnglish) updates.isEnglish = isEnglish;
         
         if (Object.keys(updates).length > 0) {
           onUpdate(course.id, updates);
@@ -158,6 +169,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
           grade: formattedGrade || undefined,
           gpaValue: gpaValue,
           isRetake: isRetake,
+          isEnglish: isEnglish,
         });
       }
     } else if (course && courseName.trim() === '') {
@@ -190,53 +202,46 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
             className="w-full p-1 border-0 focus:border-0 focus:ring-0 from-[#8B0029]/5 to-transparent text-xs rounded-none"
             autoFocus
           />
-          <select
+          <CustomDropdown
+            options={creditDropdownOptions}
             value={credits}
-            onChange={(e) => {
-              e.stopPropagation();
-              setCredits(e.target.value);
-            }}
-            onKeyDown={handleKeyDown}
-            className="w-full p-1 text-xs border-0 bg-transparent focus:ring-0 rounded-none dark:text-white"
-            style={{ WebkitAppearance: 'menulist-button', appearance: 'menulist-button' }}
-            disabled={isRetake}
-          >
-            <option value="">학점</option>
-            {creditOptions.map(credit => (
-              <option key={credit} value={credit}>
-                {credit}학점
-              </option>
-            ))}
-          </select>
-          <select
+            onChange={(value) => setCredits(value)}
+            placeholder="학점"
+            className="bg-transparent"
+          />
+          <CustomDropdown
+            options={gradeOptions}
             value={grade}
-            onChange={(e) => {
-              e.stopPropagation();
-              setGrade(e.target.value);
-            }}
-            onKeyDown={handleKeyDown}
-            className="w-full p-1 text-xs border-0 bg-transparent focus:ring-0 rounded-none dark:text-white"
-            style={{ WebkitAppearance: 'menulist-button', appearance: 'menulist-button' }}
-          >
-            <option value="">Grade</option>
-            {gradeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.value} {option.gpaValue !== null ? `(${option.gpaValue})` : ''}
-              </option>
-            ))}
-          </select>
-          <div className="flex items-center" onClick={e => e.stopPropagation()}>
-            <input 
-              type="checkbox" 
-              checked={isRetake}
-              onChange={(e) => {
-                e.stopPropagation();
-                setIsRetake(e.target.checked);
-                if (e.target.checked) setCredits('0');
-              }}
-              className="mr-2 rounded border-gray-300"
-            />
-            <label className="text-xs select-none">재수강/학점지우개</label>
+            onChange={(value) => setGrade(value)}
+            placeholder="Grade"
+            className="bg-transparent"
+          />
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center" onClick={e => e.stopPropagation()}>
+              <input 
+                type="checkbox" 
+                checked={isRetake}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setIsRetake(e.target.checked);
+                  if (e.target.checked) setCredits('0');
+                }}
+                className="mr-2 rounded border-gray-300"
+              />
+              <label className="text-xs select-none">재수강/학점지우개</label>
+            </div>
+            <div className="flex items-center" onClick={e => e.stopPropagation()}>
+              <input 
+                type="checkbox" 
+                checked={isEnglish}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setIsEnglish(e.target.checked);
+                }}
+                className="mr-2 rounded border-gray-300"
+              />
+              <label className="text-xs select-none">영강</label>
+            </div>
           </div>
           <button
             type="button"
@@ -279,11 +284,12 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
         onClick={() => {
           if (!isAnyEditing) {
             onAdd({
-              name: "New Course",
+              name: "새 수업",
               credits: 3,
               grade: undefined,
               gpaValue: null,
-              isRetake: false
+              isRetake: false,
+              isEnglish: false
             });
           }
         }}

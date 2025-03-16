@@ -11,28 +11,28 @@ export const useCourseStore = create<CourseGridState>()(
       categories: [
         {
           id: generateId(),
-          name: 'Core Courses',
+          name: 'OO 전공',
           requiredCredits: 30,
           courses: {},
           isMajor: true,
         },
         {
           id: generateId(),
-          name: 'Electives',
+          name: 'OO 교양',
           requiredCredits: 15,
           courses: {},
           isMajor: false,
         },
       ],
       semesters: [
-        { id: 'sem1', name: 'Semester 1' },
-        { id: 'sem2', name: 'Semester 2' },
-        { id: 'sem3', name: 'Semester 3' },
-        { id: 'sem4', name: 'Semester 4' },
-        { id: 'sem5', name: 'Semester 5' },
-        { id: 'sem6', name: 'Semester 6' },
-        { id: 'sem7', name: 'Semester 7' },
-        { id: 'sem8', name: 'Semester 8' },
+        { id: 'sem1', name: '1학년 1학기' },
+        { id: 'sem2', name: '1학년 2학기' },
+        { id: 'sem3', name: '2학년 1학기' },
+        { id: 'sem4', name: '2학년 2학기' },
+        { id: 'sem5', name: '3학년 1학기' },
+        { id: 'sem6', name: '3학년 2학기' },
+        { id: 'sem7', name: '4학년 1학기' },
+        { id: 'sem8', name: '4학년 2학기' },
       ],
       addCategory: (name: string, requiredCredits: number, isMajor: boolean = false) =>
         set((state) => ({

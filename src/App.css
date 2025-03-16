@@ -475,3 +475,66 @@ main.overflow-x-auto::-webkit-scrollbar-thumb {
     min-width: 800px; /* Minimum width before horizontal scrolling starts */
   }
 }
+
+/* Custom Dropdown Styles */
+.custom-dropdown-trigger {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-dropdown-trigger::after {
+  content: '';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0.5;
+}
+
+.custom-dropdown-options {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 0, 41, 0.5) transparent;
+  max-height: 100px; /* Half of the edit cell height (128px) */
+  overflow-y: auto;
+}
+
+.custom-dropdown-options::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-dropdown-options::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-dropdown-options::-webkit-scrollbar-thumb {
+  background-color: rgba(139, 0, 41, 0.5);
+  border-radius: 3px;
+}
+
+.dark .custom-dropdown-options::-webkit-scrollbar-thumb {
+  background-color: rgba(159, 18, 57, 0.5);
+}
+
+/* Instructions dropdown styles */
+.instructions-dropdown {
+  transition: all 0.3s ease;
+}
+
+.instructions-dropdown[open] {
+  animation: slideDown 0.3s ease-in-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
