@@ -4,7 +4,7 @@ const Instructions: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="mb-6">
+    <div className="mb-2">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 mx-auto px-4 py-2 bg-[#8B0029] text-white rounded-lg hover:bg-[#6d0020] transition-colors duration-200 dark:bg-[#9f1239] dark:hover:bg-[#881337]"
