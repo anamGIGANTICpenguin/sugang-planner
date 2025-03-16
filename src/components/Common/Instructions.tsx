@@ -41,6 +41,9 @@ const Instructions: React.FC = () => {
             <p className="text-sm">
             노트북, 태블릿 등의 넓은 화면에서 사용하는 것을 권장합니다.
             </p>
+            <p className="text-sm">
+              4.5학점제입니다.
+            </p>
           </section>
 
           <section>
