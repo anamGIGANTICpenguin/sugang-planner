@@ -34,7 +34,7 @@ const Instructions: React.FC = () => {
       >
         <div className="space-y-4">
           <section>
-            <h3 className="font-bold mb-2 text-[#8B0029] dark:text-[#F8F2DE]">지금까지 들은 과목들과, 들을 과목들을 한 눈에 보게 해주는 웹 어플리케이션입니다.</h3>
+            <h3 className="font-bold mb-2 text-[#8B0029] dark:text-[#F8F2DE]">지금까지 들은 수업들과, 들을 수업들을 한 눈에 보이게 정리하는 웹 어플리케이션입니다.</h3>
             <p className="text-sm">
               학점, 평점 계산 등을 통해 졸업 요건을 쉽게 확인할 수 있습니다.
             </p>
