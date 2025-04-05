@@ -19,7 +19,9 @@ const App: React.FC = () => {
   const totalCompletedCredits = categories.reduce((sum, category) => {
     const categoryCredits = semesters.reduce((catSum, semester) => {
       const semesterCourses = category.courses[semester.id] || [];
-      return catSum + semesterCourses.reduce((courseSum, course) => courseSum + course.credits, 0);
+      return catSum + semesterCourses.reduce((courseSum, course) => 
+        // Don't count F grades towards completed credits
+        courseSum + (course.grade === 'F' ? 0 : course.credits), 0);
     }, 0);
     return sum + categoryCredits;
   }, 0);
@@ -39,21 +41,29 @@ const App: React.FC = () => {
     semesters.forEach(semester => {
       const semesterCourses = category.courses[semester.id] || [];
       semesterCourses.forEach(course => {
-        if (course.isEnglish && !course.isRetake) {  // Only count if not retaken
+        if (course.isEnglish && !course.isRetake && course.grade !== 'F') {
           englishCourseCount++;
         }
-        if (course.gpaValue !== null && course.grade && course.grade !== 'P') {
-          // Overall GPA
+        
+        // Include F grades in GPA calculation
+        if (course.grade === 'F') {
+          totalGpaCredits += course.credits;
+          if (category.isMajor) {
+            totalMajorGpaCredits += course.credits;
+            if (category.majorType === 'primary') {
+              totalPrimaryMajorGpaCredits += course.credits;
+            } else if (category.majorType === 'secondary') {
+              totalSecondaryMajorGpaCredits += course.credits;
+            }
+          }
+        } else if (course.gpaValue !== null && course.grade && course.grade !== 'P') {
           totalGpaCredits += course.credits;
           totalGpaPoints += course.credits * (course.gpaValue || 0);
           
-          // Major GPAs
           if (category.isMajor) {
-            // Total Major GPA (both types)
             totalMajorGpaCredits += course.credits;
             totalMajorGpaPoints += course.credits * (course.gpaValue || 0);
             
-            // Individual Major Type GPAs
             if (category.majorType === 'primary') {
               totalPrimaryMajorGpaCredits += course.credits;
               totalPrimaryMajorGpaPoints += course.credits * (course.gpaValue || 0);
@@ -161,7 +171,9 @@ const App: React.FC = () => {
                 {categories.map(category => {
                   const totalCredits = semesters.reduce((sum, semester) => {
                     const semesterCourses = category.courses[semester.id] || [];
-                    return sum + semesterCourses.reduce((total, course) => total + course.credits, 0);
+                    return sum + semesterCourses.reduce((total, course) => 
+                      // Don't count F grades towards completed credits
+                      total + (course.grade === 'F' ? 0 : course.credits), 0);
                   }, 0);
                   
                   const completion = category.requiredCredits > 0 

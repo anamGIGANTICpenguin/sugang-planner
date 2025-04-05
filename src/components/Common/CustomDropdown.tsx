@@ -12,6 +12,7 @@ interface CustomDropdownProps {
   onChange: (value: string) => void;
   placeholder: string;
   className?: string;
+  disabled?: boolean;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -20,6 +21,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   onChange,
   placeholder,
   className = '',
+  disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -41,8 +43,10 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
     <div ref={dropdownRef} className="relative w-full">
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full p-1 text-xs text-left bg-transparent hover:bg-white/10 rounded transition-colors ${className}`}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`w-full p-1 text-xs text-left bg-transparent hover:bg-white/10 rounded transition-colors ${
+          disabled ? 'opacity-50 cursor-not-allowed' : ''
+        } ${className}`}
       >
         {selectedOption ? (
           <span>{selectedOption.label}</span>
@@ -51,7 +55,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         )}
       </button>
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <div className="absolute z-50 w-full mt-1 bg-[#E5D0AC] border border-[#8B0029]/20 rounded shadow-lg custom-dropdown-options dark:bg-gray-800 dark:border-[#9f1239]/20">
           {options.map((option) => (
             <button

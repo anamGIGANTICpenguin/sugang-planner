@@ -129,6 +129,14 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
     return gradeText;
   };
 
+  const handleGradeChange = (newGrade: string) => {
+    setGrade(newGrade);
+    // Automatically set credits to 0 for N/A and NP grades
+    if (newGrade === 'N/A' || newGrade === 'NP') {
+      setCredits('0');
+    }
+  };
+
   const submitForm = () => {
     const parsedCredits = parseFloat(credits);
     
@@ -207,6 +215,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
               onChange={(value) => setCredits(value)}
               placeholder="학점"
               className="bg-transparent pr-7"
+              disabled={grade === 'N/A' || grade === 'NP'}
             />
             <svg
               className="w-2 h-2 absolute right-2 top-[62%] -translate-y-1/2 text-[#8B0029] pointer-events-none dark:text-[#F8F2DE]"
@@ -226,7 +235,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
             <CustomDropdown
               options={gradeOptions}
               value={grade}
-              onChange={(value) => setGrade(value)}
+              onChange={handleGradeChange}
               placeholder="평점"
               className="bg-transparent pr-7"
             />

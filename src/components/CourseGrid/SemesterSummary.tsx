@@ -14,11 +14,16 @@ const SemesterSummary: React.FC<SemesterSummaryProps> = ({ categories, semester 
   categories.forEach(category => {
     const courses = category.courses[semester.id] || [];
     courses.forEach(course => {
-      totalCredits += course.credits;
-      
-      if (course.gpaValue !== null && course.grade && course.grade !== 'P') {
+      // Count F grades for GPA calculation but not for completed credits
+      if (course.grade === 'F') {
         totalGpaCredits += course.credits;
-        totalGpaPoints += course.credits * (course.gpaValue || 0);
+        totalGpaPoints += 0; // F counts as 0.0
+      } else {
+        totalCredits += course.credits;
+        if (course.gpaValue !== null && course.grade && course.grade !== 'P') {
+          totalGpaCredits += course.credits;
+          totalGpaPoints += course.credits * (course.gpaValue || 0);
+        }
       }
     });
   });

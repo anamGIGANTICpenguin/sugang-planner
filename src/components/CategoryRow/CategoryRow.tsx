@@ -85,7 +85,10 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
   // Calculate total credits for this category
   const totalCredits = semesters.reduce((sum, semester) => {
     const semesterCourses = category.courses[semester.id] || [];
-    return sum + semesterCourses.reduce((total, course) => total + course.credits, 0);
+    return sum + semesterCourses.reduce((total, course) => {
+      // Don't count F grades towards completed credits
+      return total + (course.grade === 'F' ? 0 : course.credits);
+    }, 0);
   }, 0);
 
   return (
