@@ -47,19 +47,16 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      submitForm();
-    } else if (e.key === 'Escape') {
+    if (e.key === 'Escape') {
       resetForm();
       setIsEditing(false);
     }
+    // Remove Enter key submission
   };
 
   const handleBlur = (e: React.FocusEvent) => {
-    // Only submit the form if focus is leaving the category editing area entirely
-    if (categoryRef.current && !categoryRef.current.contains(e.relatedTarget as Node)) {
-      submitForm();
-    }
+    // No longer submitting on blur
+    return;
   };
 
   const resetForm = () => {
@@ -197,6 +194,31 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                     >제2전공</label>
                   </div>
                 </div>
+              </div>
+              
+              {/* Confirmation button */}
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    submitForm();
+                  }}
+                  className="mt-2 w-[75px] bg-[#8B0029] text-white text-xs py-1 px-2 rounded hover:bg-[#7a0024] transition-colors"
+                >
+                  확인
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    resetForm();
+                    setIsEditing(false);
+                  }}
+                  className="mt-2 w-[75px] bg-gray-300 text-gray-700 text-xs py-1 px-2 rounded hover:bg-gray-400 transition-colors"
+                >
+                  취소
+                </button>
               </div>
             </div>
           ) : (
