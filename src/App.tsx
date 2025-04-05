@@ -185,7 +185,9 @@ const App: React.FC = () => {
                       <div className="flex justify-between text-sm mb-1">
                         <div className="flex items-center">
                           {category.isMajor && (
-                            <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded mr-2">전공</span>
+                            <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded mr-2">
+                              {category.majorType === 'secondary' ? '제2전공' : '본전공'}
+                            </span>
                           )}
                           <span>{category.name}</span>
                         </div>

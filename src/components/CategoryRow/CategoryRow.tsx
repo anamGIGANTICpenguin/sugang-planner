@@ -152,6 +152,9 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                     onTouchEnd={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      const newValue = !isMajor || majorType !== 'primary';
+                      setIsMajor(newValue);
+                      setMajorType(newValue ? 'primary' : undefined);
                     }}
                   >
                     <input 
@@ -167,12 +170,6 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                     <label 
                       className="text-xs text-[#333333] dark:text-white"
                       onClick={(e) => e.stopPropagation()}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsMajor(!isMajor || majorType !== 'primary');
-                        setMajorType((!isMajor || majorType !== 'primary') ? 'primary' : undefined);
-                      }}
                     >본전공</label>
                   </div>
                   <div 
@@ -181,6 +178,9 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                     onTouchEnd={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      const newValue = !isMajor || majorType !== 'secondary';
+                      setIsMajor(newValue);
+                      setMajorType(newValue ? 'secondary' : undefined);
                     }}
                   >
                     <input 
@@ -196,12 +196,6 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                     <label 
                       className="text-xs text-[#333333] dark:text-white"
                       onClick={(e) => e.stopPropagation()}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsMajor(!isMajor || majorType !== 'secondary');
-                        setMajorType((!isMajor || majorType !== 'secondary') ? 'secondary' : undefined);
-                      }}
                     >제2전공</label>
                   </div>
                 </div>
