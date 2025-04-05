@@ -45,9 +45,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         className={`w-full p-1 text-xs text-left bg-transparent hover:bg-white/10 rounded transition-colors ${className}`}
       >
         {selectedOption ? (
-          <span style={{ color: selectedOption.color }}>
-            {selectedOption.label}
-          </span>
+          <span>{selectedOption.label}</span>
         ) : (
           <span className="text-gray-400">{placeholder}</span>
         )}
@@ -65,7 +63,6 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               className={`w-full text-left px-2 py-1 text-xs hover:bg-[#8B0029]/10 transition-colors
                 ${value === option.value ? 'bg-[#8B0029]/5' : ''}
                 dark:hover:bg-[#9f1239]/20 dark:text-white`}
-              style={{ color: option.color }}
             >
               {option.label}
             </button>

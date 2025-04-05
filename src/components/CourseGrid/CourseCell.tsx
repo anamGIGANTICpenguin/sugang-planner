@@ -2,20 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Course } from '../../types';
 import DynamicInput from '../Common/DynamicInput';
 import CustomDropdown from '../Common/CustomDropdown';
-
-// Update gradeOptions to include colors
-export const gradeOptions = [
-  { value: "A+", label: "A+ (4.5)", gpaValue: 4.5, color: '#4290f5' },
-  { value: "A0", label: "A0 (4.0)", gpaValue: 4.0, color: '#15803d' },
-  { value: "B+", label: "B+ (3.5)", gpaValue: 3.5, color: '#ca8a04' },
-  { value: "B0", label: "B0 (3.0)", gpaValue: 3.0, color: '#ea580c' },
-  { value: "C+", label: "C+ (2.5)", gpaValue: 2.5, color: '#ea580c' },
-  { value: "C0", label: "C0 (2.0)", gpaValue: 2.0, color: '#ea580c' },
-  { value: "D+", label: "D+ (1.5)", gpaValue: 1.5, color: '#ea580c' },
-  { value: "D0", label: "D0 (1.0)", gpaValue: 1.0, color: '#ea580c' },
-  { value: "F", label: "F (0.0)", gpaValue: 0.0, color: '#dc2626' },
-  { value: "P", label: "P (Pass)", gpaValue: null, color: '#2563eb' },
-];
+import { useGradeScaleStore, getGradeOptions } from '../../store/gradeScaleStore';
 
 // Update the credit options array
 const creditOptions = [0.5, 1, 2, 3, 4, 5, 6];
@@ -36,6 +23,9 @@ interface CourseCellProps {
 }
 
 const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemove, isAnyEditing, onEditStateChange }) => {
+  const { scale } = useGradeScaleStore();
+  const gradeOptions = getGradeOptions(scale);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [courseName, setCourseName] = useState('');
   const [credits, setCredits] = useState('');
@@ -202,20 +192,50 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
             className="w-full p-1 border-0 focus:border-0 focus:ring-0 from-[#8B0029]/5 to-transparent text-xs rounded-none"
             autoFocus
           />
-          <CustomDropdown
-            options={creditDropdownOptions}
-            value={credits}
-            onChange={(value) => setCredits(value)}
-            placeholder="학점"
-            className="bg-transparent"
-          />
-          <CustomDropdown
-            options={gradeOptions}
-            value={grade}
-            onChange={(value) => setGrade(value)}
-            placeholder="Grade"
-            className="bg-transparent"
-          />
+          <div className="relative">
+            <CustomDropdown
+              options={creditDropdownOptions}
+              value={credits}
+              onChange={(value) => setCredits(value)}
+              placeholder="학점"
+              className="bg-transparent pr-7"
+            />
+            <svg
+              className="w-2 h-2 absolute right-2 top-[62%] -translate-y-1/2 text-[#8B0029] pointer-events-none dark:text-[#F8F2DE]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+          <div className="relative">
+            <CustomDropdown
+              options={gradeOptions}
+              value={grade}
+              onChange={(value) => setGrade(value)}
+              placeholder="평점"
+              className="bg-transparent pr-7"
+            />
+            <svg
+              className="w-2 h-2 absolute right-2 top-[62%] -translate-y-1/2 text-[#8B0029] pointer-events-none dark:text-[#F8F2DE]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
           <div className="flex flex-col gap-1">
             <div className="flex items-center" onClick={e => e.stopPropagation()}>
               <input 
@@ -228,7 +248,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
                 }}
                 className="mr-2 rounded border-gray-300"
               />
-              <label className="text-xs select-none">재수강/학점지우개</label>
+              <label className="text-xs select-none">재수강/수강철회</label>
             </div>
             <div className="flex items-center" onClick={e => e.stopPropagation()}>
               <input 
@@ -251,7 +271,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
             }}
             className="w-full text-[#8B0029] hover:text-[#6d0020] text-xs py-1 text-center border border-[#8B0029] hover:bg-[#8B0029]/10 rounded dark:text-[#F8F2DE] dark:border-[#F8F2DE] dark:hover:bg-[#F8F2DE]/10"
           >
-            Done
+            확인
           </button>
           {course && (
             <button
@@ -267,7 +287,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
               className="w-full text-red-500 hover:text-red-700 text-xs py-1 text-center border border-red-500 hover:bg-red-50 rounded"
               title="Delete course"
             >
-              Delete
+              삭제
             </button>
           )}
         </div>

@@ -11,6 +11,7 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { useCourseStore } from '../../store/courseStore';
+import { useGradeScaleStore } from '../../store/gradeScaleStore';
 
 ChartJS.register(
   CategoryScale,
@@ -24,6 +25,7 @@ ChartJS.register(
 
 const GPAGraph: React.FC = () => {
   const { categories, semesters } = useCourseStore();
+  const { scale } = useGradeScaleStore();
 
   // Calculate GPA for each semester
   const semesterGPAs = semesters.map(semester => {
@@ -83,7 +85,7 @@ const GPAGraph: React.FC = () => {
     scales: {
       y: {
         min: 0,
-        max: 4.5,
+        max: scale === '4.3' ? 4.3 : 4.5,
         grid: {
           color: 'rgba(255, 255, 255, 0.1)',
         },

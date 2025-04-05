@@ -34,4 +34,5 @@ export interface CourseGridState {
   updateCourse: (categoryId: string, semesterId: string, courseId: string, updates: Partial<Omit<Course, 'id'>>) => void;
   removeCourse: (categoryId: string, semesterId: string, courseId: string) => void;
   reorderCategories: (sourceIndex: number, destinationIndex: number) => void;
+  resetAllCourses: () => void;
 }

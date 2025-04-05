@@ -58,7 +58,7 @@ const SemesterHeader: React.FC<SemesterHeaderProps> = ({ name, onUpdate, onDelet
           onChange={(value) => setSemesterName(value)}
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
-          className="w-full p-0 text-center font-semibold border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none text-[#333333] dark:bg-[#202838] dark:text-[#F8F2DE] dark:focus:ring-0 dark:focus:outline-none"
+          className="w-full p-0 text-center font-semibold border-0 focus:border-0 focus:ring-0 text-xs rounded-none text-[#333333] dark:bg-[#202838] dark:text-[#F8F2DE] dark:focus:ring-0 dark:focus:outline-none"
           autoFocus
         />
       </div>

@@ -142,6 +142,13 @@ export const useCourseStore = create<CourseGridState>()(
           newCategories.splice(adjustedDestIndex, 0, movedCategory);
           return { categories: newCategories };
         }),
+      resetAllCourses: () => set((state) => ({
+        ...state,
+        categories: state.categories.map(category => ({
+          ...category,
+          courses: {}
+        }))
+      })),
     }),
     {
       name: 'course-planner-storage',

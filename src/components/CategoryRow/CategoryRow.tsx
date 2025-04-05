@@ -94,7 +94,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
         {/* Make only the category cell draggable */}
         <div 
           className={`p-2 bg-[#E5D0AC] border-r-2 font-medium ${
-            isEditing ? 'bg-red-50 border-[#8B0029]' : 'border-[#8B0029] hover:bg-[#d4bd94] cursor-move'
+            isEditing ? 'border-[#8B0029]' : 'border-[#8B0029] hover:bg-[#d4bd94] cursor-move'
           } dark:bg-gray-800 dark:text-white dark:border-[#9f1239] dark:hover:bg-gray-700`}
           onClick={isEditing ? undefined : handleCategoryClick}
           ref={categoryRef}
@@ -107,33 +107,48 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
         >
           {isEditing ? (
             <div className="flex flex-col gap-2" onBlurCapture={handleBlur}>
-              <DynamicInput
-                type="text"
-                value={categoryName}
-                onChange={(value) => setCategoryName(value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Category name"
-                className="w-full p-0 border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none text-[#333333] dark:text-white"
-                autoFocus
-              />
-              <DynamicInput
-                type="number"
-                value={requiredCredits}
-                onChange={(value) => setRequiredCredits(value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Required credits"
-                className="w-20 p-0 border-0 focus:border-0 focus:ring-0 bg-gradient-to-r from-[#8B0029]/5 to-transparent text-xs rounded-none text-[#333333] dark:text-white"
-                min="0"
-                step="1"
-              />
-              <div className="flex items-center mt-1">
-                <input 
-                  type="checkbox" 
-                  checked={isMajor} 
-                  onChange={(e) => setIsMajor(e.target.checked)}
-                  className="mr-2 rounded border-gray-300"
+              <div>
+                <span className="text-[10px] text-gray-600 dark:text-gray-400 mb-1 block">
+                  수업 분류
+                </span>
+                <DynamicInput
+                  type="text"
+                  value={categoryName}
+                  onChange={(value) => setCategoryName(value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="수업 분류"
+                  className="w-full p-0 border-0 focus:border-0 focus:ring-0 text-xs rounded-none text-[#333333] dark:text-white"
+                  autoFocus
                 />
-                <label className="text-xs text-[#333333] dark:text-white">전공 (Major)</label>
+              </div>
+              <div>
+                <span className="text-[10px] text-gray-600 dark:text-gray-400 mb-1 block">
+                  취득해야 하는 총 학점
+                </span>
+                <DynamicInput
+                  type="number"
+                  value={requiredCredits}
+                  onChange={(value) => setRequiredCredits(value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="학점"
+                  className="w-12 p-0 border-0 focus:border-0 focus:ring-0 text-xs rounded-none text-[#333333] dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  min="0"
+                  step="1"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] text-gray-600 dark:text-gray-400 mb-1 block">
+                  전공 수업이면 체크
+                </span>
+                <div className="flex items-center mt-1">
+                  <input 
+                    type="checkbox" 
+                    checked={isMajor} 
+                    onChange={(e) => setIsMajor(e.target.checked)}
+                    className="mr-2 rounded border-gray-300"
+                  />
+                  <label className="text-xs text-[#333333] dark:text-white"></label>
+                </div>
               </div>
             </div>
           ) : (

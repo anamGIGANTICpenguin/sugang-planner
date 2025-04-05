@@ -7,6 +7,7 @@ import tigerLogo from './assets/tigerlogo.svg'; // Import the tiger logo
 import cubadultImage from './assets/cubadult.png';
 import GPAGraph from './components/Summary/GPAGraph';
 import Instructions from './components/Common/Instructions';
+import GradeScaleToggle from './components/Common/GradeScaleToggle';
 
 const App: React.FC = () => {
   // Get data for summary display in header
@@ -63,9 +64,11 @@ const App: React.FC = () => {
           <div className="flex flex-col items-center text-center">
             <img src={tigerLogo} alt="Tiger Logo" className="tiger-logo mb-2" />
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold gugi-regular">졸업하고싶은 호랭이</h1>
+              <h1 className="text-2xl font-bold gugi-regular text-[#FEF9E1]">졸업하고싶은 호랭이</h1>
             </div>
-            <p className="text-lg font-bold gugi-regular">어흥</p>
+            <div className="mt-4">
+              <GradeScaleToggle />
+            </div>
           </div>
         </div>
       </header>
@@ -137,7 +140,7 @@ const App: React.FC = () => {
                           <span>{category.name}</span>
                         </div>
                         <span>
-                          {totalCredits}/{category.requiredCredits}
+                          {totalCredits}/{category.requiredCredits} 학점 ({Math.round(completion)}%)
                         </span>
                       </div>
                       <div className={`w-full bg-gray-700 rounded-full h-1.5`}>
