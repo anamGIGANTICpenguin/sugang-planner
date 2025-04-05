@@ -7,7 +7,7 @@ import DynamicInput from '../Common/DynamicInput';
 interface CategoryRowProps {
   category: Category;
   semesters: Semester[];
-  updateCategory: (id: string, name: string, requiredCredits: number, isMajor: boolean) => void;
+  updateCategory: (id: string, name: string, requiredCredits: number, isMajor: boolean, majorType?: 'primary' | 'secondary') => void;
   removeCategory: (id: string) => void;
   addCourse: (categoryId: string, semesterId: string, course: Omit<Course, 'id'>) => void;
   updateCourse: (categoryId: string, semesterId: string, courseId: string, updates: Partial<Omit<Course, 'id'>>) => void;
@@ -37,6 +37,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
   const [categoryName, setCategoryName] = useState(category.name);
   const [requiredCredits, setRequiredCredits] = useState(category.requiredCredits.toString());
   const [isMajor, setIsMajor] = useState(category.isMajor);
+  const [majorType, setMajorType] = useState<'primary' | 'secondary' | undefined>(category.majorType);
   const categoryRef = useRef<HTMLDivElement>(null);
 
   const handleCategoryClick = () => {
@@ -65,6 +66,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
     setCategoryName(category.name);
     setRequiredCredits(category.requiredCredits.toString());
     setIsMajor(category.isMajor);
+    setMajorType(category.majorType);
   };
 
   const submitForm = () => {
@@ -72,7 +74,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
     const credits = parseFloat(requiredCredits);
     
     if (trimmedName && !isNaN(credits)) {
-      updateCategory(category.id, trimmedName, credits, isMajor);
+      updateCategory(category.id, trimmedName, credits, isMajor, majorType);
     } else {
       resetForm();
     }
@@ -138,16 +140,33 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
               </div>
               <div>
                 <span className="text-[10px] text-gray-600 dark:text-gray-400 mb-1 block">
-                  전공 수업이면 체크
+                  전공 유형
                 </span>
-                <div className="flex items-center mt-1">
-                  <input 
-                    type="checkbox" 
-                    checked={isMajor} 
-                    onChange={(e) => setIsMajor(e.target.checked)}
-                    className="mr-2 rounded border-gray-300"
-                  />
-                  <label className="text-xs text-[#333333] dark:text-white"></label>
+                <div className="flex flex-col gap-1 mt-1">
+                  <div className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={isMajor && majorType === 'primary'}
+                      onChange={(e) => {
+                        setIsMajor(e.target.checked);
+                        setMajorType(e.target.checked ? 'primary' : undefined);
+                      }}
+                      className="mr-2 rounded border-gray-300"
+                    />
+                    <label className="text-xs text-[#333333] dark:text-white">본전공</label>
+                  </div>
+                  <div className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={isMajor && majorType === 'secondary'}
+                      onChange={(e) => {
+                        setIsMajor(e.target.checked);
+                        setMajorType(e.target.checked ? 'secondary' : undefined);
+                      }}
+                      className="mr-2 rounded border-gray-300"
+                    />
+                    <label className="text-xs text-[#333333] dark:text-white">제2전공</label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -160,7 +179,9 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                 </div>
                 {category.isMajor && (
                   <div className="mt-1">
-                    <span className="text-xs bg-[#8B0029] text-white px-1 rounded">전공</span>
+                    <span className="text-xs bg-[#8B0029] text-white px-1 rounded">
+                      {category.majorType === 'secondary' ? '제2전공' : '본전공'}
+                    </span>
                   </div>
                 )}
               </div>

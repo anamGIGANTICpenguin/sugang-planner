@@ -14,6 +14,7 @@ export interface Category {
   requiredCredits: number;
   courses: Record<string, Course[]>; // key is semesterId
   isMajor: boolean; // To indicate if this is a major (전공) category
+  majorType?: 'primary' | 'secondary'; // Add this line to distinguish major types
 }
 
 export interface Semester {

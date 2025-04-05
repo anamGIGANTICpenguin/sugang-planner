@@ -29,8 +29,12 @@ const App: React.FC = () => {
   let totalGpaPoints = 0;
   let totalMajorGpaCredits = 0;
   let totalMajorGpaPoints = 0;
+  let totalPrimaryMajorGpaCredits = 0;
+  let totalPrimaryMajorGpaPoints = 0;
+  let totalSecondaryMajorGpaCredits = 0;
+  let totalSecondaryMajorGpaPoints = 0;
   let englishCourseCount = 0;
-  
+
   categories.forEach(category => {
     semesters.forEach(semester => {
       const semesterCourses = category.courses[semester.id] || [];
@@ -43,10 +47,20 @@ const App: React.FC = () => {
           totalGpaCredits += course.credits;
           totalGpaPoints += course.credits * (course.gpaValue || 0);
           
-          // Major GPA
+          // Major GPAs
           if (category.isMajor) {
+            // Total Major GPA (both types)
             totalMajorGpaCredits += course.credits;
             totalMajorGpaPoints += course.credits * (course.gpaValue || 0);
+            
+            // Individual Major Type GPAs
+            if (category.majorType === 'primary') {
+              totalPrimaryMajorGpaCredits += course.credits;
+              totalPrimaryMajorGpaPoints += course.credits * (course.gpaValue || 0);
+            } else if (category.majorType === 'secondary') {
+              totalSecondaryMajorGpaCredits += course.credits;
+              totalSecondaryMajorGpaPoints += course.credits * (course.gpaValue || 0);
+            }
           }
         }
       });
@@ -55,6 +69,12 @@ const App: React.FC = () => {
   
   const overallGpa = totalGpaCredits > 0 ? totalGpaPoints / totalGpaCredits : 0;
   const majorGpa = totalMajorGpaCredits > 0 ? totalMajorGpaPoints / totalMajorGpaCredits : 0;
+  const primaryMajorGpa = totalPrimaryMajorGpaCredits > 0 
+    ? totalPrimaryMajorGpaPoints / totalPrimaryMajorGpaCredits 
+    : 0;
+  const secondaryMajorGpa = totalSecondaryMajorGpaCredits > 0 
+    ? totalSecondaryMajorGpaPoints / totalSecondaryMajorGpaCredits 
+    : 0;
   const overallCompletion = totalRequiredCredits > 0 ? (totalCompletedCredits / totalRequiredCredits) * 100 : 0;
 
   return (
@@ -100,23 +120,41 @@ const App: React.FC = () => {
                 </div>
               </div>
               
-              <div className="flex justify-center space-x-8 mb-4">
+              {/* First line: Total GPA and English courses */}
+              <div className="flex justify-center space-x-12 mb-2">
                 <div className="text-center">
-                  <span className="block text-sm">총 GPA</span>
+                  <span className="block text-sm">총 평점</span>
                   <span className="text-2xl font-bold">{overallGpa.toFixed(2)}</span>
                 </div>
-                
-                {totalMajorGpaCredits > 0 && (
-                  <div className="text-center">
-                    <span className="block text-sm">전공 GPA</span>
-                    <span className="text-2xl font-bold">{majorGpa.toFixed(2)}</span>
-                  </div>
-                )}
 
                 <div className="text-center">
                   <span className="block text-sm">영강</span>
                   <span className="text-2xl font-bold">{englishCourseCount}개</span>
                 </div>
+              </div>
+              
+              {/* Second line: Major GPAs */}
+              <div className="flex justify-center space-x-4 mb-4">
+                {totalMajorGpaCredits > 0 && (
+                  <div className="text-center">
+                    <span className="block text-sm">전공</span>
+                    <span className="text-2xl font-bold">{majorGpa.toFixed(2)}</span>
+                  </div>
+                )}
+                
+                {totalPrimaryMajorGpaCredits > 0 && (
+                  <div className="text-center">
+                    <span className="block text-sm">본전공</span>
+                    <span className="text-2xl font-bold">{primaryMajorGpa.toFixed(2)}</span>
+                  </div>
+                )}
+                
+                {totalSecondaryMajorGpaCredits > 0 && (
+                  <div className="text-center">
+                    <span className="block text-sm">제2전공</span>
+                    <span className="text-2xl font-bold">{secondaryMajorGpa.toFixed(2)}</span>
+                  </div>
+                )}
               </div>
               
               <div className="grid gap-3">

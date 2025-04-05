@@ -47,10 +47,10 @@ export const useCourseStore = create<CourseGridState>()(
             },
           ],
         })),
-      updateCategory: (id: string, name: string, requiredCredits: number, isMajor: boolean) =>
+      updateCategory: (id: string, name: string, requiredCredits: number, isMajor: boolean, majorType?: 'primary' | 'secondary') =>
         set((state) => ({
           categories: state.categories.map((category) =>
-            category.id === id ? { ...category, name, requiredCredits, isMajor } : category
+            category.id === id ? { ...category, name, requiredCredits, isMajor, majorType } : category
           ),
         })),
       removeCategory: (id) =>

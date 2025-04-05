@@ -61,7 +61,7 @@ const GPAGraph: React.FC = () => {
     labels: semesters.map(sem => sem.name),
     datasets: [
       {
-        label: '총 GPA',
+        label: '총 평점',
         data: semesterGPAs.map(gpa => gpa.total),
         borderColor: '#10b981',
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -69,7 +69,7 @@ const GPAGraph: React.FC = () => {
         borderWidth: 1.5,
       },
       {
-        label: '전공 GPA',
+        label: '전공 평점',
         data: semesterGPAs.map(gpa => gpa.major),
         borderColor: '#E5D0AC',
         backgroundColor: 'rgba(229, 208, 172, 0.1)',
