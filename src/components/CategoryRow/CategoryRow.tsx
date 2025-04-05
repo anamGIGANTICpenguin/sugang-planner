@@ -147,7 +147,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                 </span>
                 <div className="flex flex-col gap-1 mt-1">
                   <div 
-                    className="flex items-center" 
+                    className="flex items-center select-none" 
                     onClick={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => {
                       e.preventDefault();
@@ -168,12 +168,11 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                       className="mr-2 rounded border-gray-300"
                     />
                     <label 
-                      className="text-xs text-[#333333] dark:text-white"
-                      onClick={(e) => e.stopPropagation()}
+                      className="text-xs text-[#333333] dark:text-white select-none"
                     >본전공</label>
                   </div>
                   <div 
-                    className="flex items-center"
+                    className="flex items-center select-none"
                     onClick={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => {
                       e.preventDefault();
@@ -194,8 +193,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                       className="mr-2 rounded border-gray-300"
                     />
                     <label 
-                      className="text-xs text-[#333333] dark:text-white"
-                      onClick={(e) => e.stopPropagation()}
+                      className="text-xs text-[#333333] dark:text-white select-none"
                     >제2전공</label>
                   </div>
                 </div>
