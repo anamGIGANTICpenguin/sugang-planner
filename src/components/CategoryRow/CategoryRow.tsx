@@ -146,29 +146,63 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                   전공 유형
                 </span>
                 <div className="flex flex-col gap-1 mt-1">
-                  <div className="flex items-center">
+                  <div 
+                    className="flex items-center" 
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
                     <input 
                       type="checkbox" 
                       checked={isMajor && majorType === 'primary'}
                       onChange={(e) => {
+                        e.stopPropagation();
                         setIsMajor(e.target.checked);
                         setMajorType(e.target.checked ? 'primary' : undefined);
                       }}
                       className="mr-2 rounded border-gray-300"
                     />
-                    <label className="text-xs text-[#333333] dark:text-white">본전공</label>
+                    <label 
+                      className="text-xs text-[#333333] dark:text-white"
+                      onClick={(e) => e.stopPropagation()}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsMajor(!isMajor || majorType !== 'primary');
+                        setMajorType((!isMajor || majorType !== 'primary') ? 'primary' : undefined);
+                      }}
+                    >본전공</label>
                   </div>
-                  <div className="flex items-center">
+                  <div 
+                    className="flex items-center"
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
                     <input 
                       type="checkbox" 
                       checked={isMajor && majorType === 'secondary'}
                       onChange={(e) => {
+                        e.stopPropagation();
                         setIsMajor(e.target.checked);
                         setMajorType(e.target.checked ? 'secondary' : undefined);
                       }}
                       className="mr-2 rounded border-gray-300"
                     />
-                    <label className="text-xs text-[#333333] dark:text-white">제2전공</label>
+                    <label 
+                      className="text-xs text-[#333333] dark:text-white"
+                      onClick={(e) => e.stopPropagation()}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsMajor(!isMajor || majorType !== 'secondary');
+                        setMajorType((!isMajor || majorType !== 'secondary') ? 'secondary' : undefined);
+                      }}
+                    >제2전공</label>
                   </div>
                 </div>
               </div>
