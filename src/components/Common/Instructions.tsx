@@ -34,35 +34,31 @@ const Instructions: React.FC = () => {
       >
         <div className="space-y-4">
           <section>
-            <h3 className="font-bold mb-2 text-[#8B0029] dark:text-[#F8F2DE]">지금까지 들은 수업들과, 들을 수업들을 한 눈에 보이게 정리하는 웹 어플리케이션입니다.</h3>
-            <p className="text-sm">
-              학점, 평점 계산 등을 통해 졸업 요건을 쉽게 확인할 수 있습니다.
-            </p>
-            <p className="text-sm">
-            노트북, 태블릿 등의 넓은 화면에서 사용하는 것을 권장합니다.
-            </p>
-            <p className="text-sm">
-              4.5학점제입니다.
-            </p>
+            <h3 className="font-bold mb-2 text-xl text-[#8B0029] dark:text-[#F8F2DE]">수강 계획을 한눈에 정리하고 싶은 사람이 만든 웹 어플리케이션</h3>
+            <p className="text-xs">
+            노트북, 태블릿 등 넓은 화면에서 사용하는 것을 권장합니다.
+            </p>  
           </section>
 
           <section>
             <h3 className="font-bold mb-2 text-[#8B0029] dark:text-[#F8F2DE]">기본 사용법</h3>
             <ul className="list-disc list-inside space-y-2 text-sm">
-              <li>카테고리(전공필수, 전공선택, 필수교양, 선택교양 등) 추가: 왼쪽 하단의 + 버튼을 클릭하세요</li>
-              <li>학기 추가: 왼쪽 상단의 + 버튼을 클릭하세요</li>
-              <li>과목 추가: 과목을 추가하고 싶은 영역을 클릭하세요</li>
-              <li>과목 편집: 과목을 클릭하여 수정하세요</li>
-              <li>카테고리 순서 변경: 카테고리를 드래그하여 위치를 바꾸세요</li>
+              <li>수업 분류 추가: 왼쪽 하단 + 버튼</li>
+              <li>학기 추가: 왼쪽 상단의 + 버튼</li>
+              <li>과목 추가: 과목을 추가하고 싶은 영역을 클릭</li>
+              <li>과목 편집: 과목을 클릭하여 수정</li>
+              <li>수업 분류 순서 변경: 카테고리를 드래그하여 위치를 변경</li>
             </ul>
           </section>
           
           <section>
             <h3 className="font-bold mb-2 text-[#8B0029] dark:text-[#F8F2DE]">기능</h3>
             <ul className="list-disc list-inside space-y-2 text-sm">
-              <li>재수강/학점 지우개: 과목 추가/수정 시 체크박스로 설정 가능</li>
-              <li>전공 표시: 카테고리 생성/수정 시 '전공' 체크박스로 설정</li>
-              <li>GPA 계산: 자동으로 총 평점과 전공 평점을 계산해 줍니다</li>
+              <li>4.5학점제, 4.3학점제 사이에서 선택 가능</li>
+              <li>재수강/수강철회: 과목 추가/수정 시 체크박스로 설정 가능</li>
+              <li>전공 표시: 카테고리 생성/수정 시 '본전공' 혹은 '제2전공' 체크박스로 설정</li>
+              <li>제2전공 평점 계산: 총 평점 및 전공 평점 이외에도 본전공과 제2전공의 평점을 따로 계산해 줍니다</li>
+              <li>영어 강의: 영강을 몇 개 들었는지 표시해 줍니다</li>
             </ul>
           </section>
           
