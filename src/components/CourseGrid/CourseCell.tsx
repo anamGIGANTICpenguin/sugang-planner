@@ -40,7 +40,7 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
     if (!grade) return 'text-gray-600';
     
     // A grades: Blue for A+, Dark green for A0 and A-
-    if (grade === 'A+') return 'text-blue-700';
+    if (grade === 'A+') return 'text-blue-600';
     if (grade === 'A0' || grade === 'A-') return 'text-green-800';
     
     // B grades: Yellow
