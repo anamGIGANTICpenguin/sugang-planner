@@ -39,13 +39,21 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
   const getGradeColor = (grade: string): string => {
     if (!grade) return 'text-gray-600';
     
-    if (grade === 'A+') return 'text-[#4290f5]';
-    if (grade === 'P') return 'text-blue-600';
-    if (grade === 'A0') return 'text-green-600';
-    if (grade === 'B+') return 'text-yellow-600';
-    if (grade === 'B0') return 'text-orange-500';
+    // A grades: Blue for A+, Dark green for A0 and A-
+    if (grade === 'A+') return 'text-blue-700';
+    if (grade === 'A0' || grade === 'A-') return 'text-green-800';
+    
+    // B grades: Yellow
+    if (grade.startsWith('B')) return 'text-yellow-700';
+    
+    // C to D grades: Orange
+    if (grade.startsWith('C') || grade.startsWith('D')) return 'text-orange-600';
+    
+    // Special grades
     if (grade === 'F') return 'text-red-600';
-    return 'text-orange-600'; // default for C+, C0, D+, D0, etc.
+    if (grade === 'P') return 'text-blue-600';
+    
+    return 'text-red-600'; // default
   };
 
   // Initialize with course data if available
@@ -341,7 +349,9 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
           <span className="text-[10px] text-[#333333] dark:text-gray-500">({course.credits})</span>
         )}
         {course.grade && (
-          <span className={`font-medium text-xs text-right ${getGradeColor(course.grade)}`}>
+          <span className={`font-medium text-xs text-right ${
+            grade.startsWith('B') ? 'text-yellow-700 dark:text-yellow-600' : getGradeColor(course.grade)
+          }`}>
             {course.grade === 'P' || course.grade === 'F'
               ? <>{course.grade}<span className="invisible">0</span></>
               : course.grade.length === 1 && ['A', 'B', 'C', 'D'].includes(course.grade)
