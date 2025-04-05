@@ -54,7 +54,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
     // Remove Enter key submission
   };
 
-  const handleBlur = (e: React.FocusEvent) => {
+  const handleBlur = () => {
     // No longer submitting on blur
     return;
   };
