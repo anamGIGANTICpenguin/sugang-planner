@@ -11,6 +11,7 @@ import DropZone from '../CategoryRow/DropZone';
 const CourseGrid: React.FC = () => {
   const [isAnyEditing, setIsAnyEditing] = useState(false);
   const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
+  const [isDraggingCourse, setIsDraggingCourse] = useState(false); // Add this state
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -41,11 +42,13 @@ const CourseGrid: React.FC = () => {
   };
 
   const handleDragStart = (categoryId: string) => {
-    setDraggedCategory(categoryId);
+    if (!isDraggingCourse) { // Only set dragged category if not dragging a course
+      setDraggedCategory(categoryId);
+    }  
   };
 
   const handleDragEnd = () => {
-    if (draggedCategory && dropTargetIndex !== null) {
+    if (draggedCategory && dropTargetIndex !== null && !isDraggingCourse) {
       const sourceIndex = categories.findIndex(c => c.id === draggedCategory);
       if (sourceIndex !== -1 && sourceIndex !== dropTargetIndex) {
         reorderCategories(sourceIndex, dropTargetIndex);
@@ -146,10 +149,12 @@ const CourseGrid: React.FC = () => {
             isOver={dropTargetIndex === index}
             onDragOver={(e) => {
               e.preventDefault();
-              handleDropZoneDragOver(index);
+              if (!isDraggingCourse) { // Only show drop zone if not dragging a course
+                handleDropZoneDragOver(index);
+              }
             }}
             onDrop={handleDragEnd}
-            isDisabled={categories.findIndex(c => c.id === draggedCategory) === index - 1}
+            isDisabled={isDraggingCourse || categories.findIndex(c => c.id === draggedCategory) === index - 1}
             data-dropzone={index}
           />
           <CategoryRow
@@ -165,6 +170,8 @@ const CourseGrid: React.FC = () => {
             onDragStart={() => handleDragStart(category.id)}
             onDragEnd={handleDragEnd}
             isDragging={draggedCategory === category.id}
+            onCourseDragStart={() => setIsDraggingCourse(true)}
+            onCourseDragEnd={() => setIsDraggingCourse(false)}
           />
           {index === categories.length - 1 && (
             <DropZone

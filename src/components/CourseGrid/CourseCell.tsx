@@ -15,14 +15,31 @@ const creditDropdownOptions = creditOptions.map(credit => ({
 
 interface CourseCellProps {
   course?: Course;
+  categoryId: string;  // Add this prop
+  semesterId: string; // Add this prop
   onAdd: (course: Omit<Course, 'id'>) => void;
   onUpdate: (courseId: string, updates: Partial<Omit<Course, 'id'>>) => void;
   onRemove: (courseId: string) => void;
+  onDrop?: (draggedCourse: Course, targetSemesterId: string, sourceSemesterId: string) => void; // Add this prop
   isAnyEditing: boolean;
   onEditStateChange: (isEditing: boolean) => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
-const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemove, isAnyEditing, onEditStateChange }) => {
+const CourseCell: React.FC<CourseCellProps> = ({
+  course,
+  categoryId,
+  semesterId,
+  onAdd,
+  onUpdate,
+  onRemove,
+  onDrop,
+  isAnyEditing,
+  onEditStateChange,
+  onDragStart,
+  onDragEnd,
+}) => {
   const { scale } = useGradeScaleStore();
   const gradeOptions = getGradeOptions(scale);
   
@@ -187,6 +204,42 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
     onEditStateChange(false);
   };
 
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!course) return;
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      course,
+      sourceCategoryId: categoryId,
+      sourceSemesterId: semesterId
+    }));
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.classList.add('opacity-50');
+    onDragStart?.();
+  };
+
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    e.currentTarget.classList.remove('opacity-50');
+    onDragEnd?.();
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.sourceCategoryId !== categoryId) return; // Only allow drops within same category
+      if (data.sourceSemesterId === semesterId) return; // Prevent dropping in same semester
+      if (onDrop && data.course) {
+        onDrop(data.course, semesterId, data.sourceSemesterId);
+      }
+    } catch (err) {
+      console.error('Error processing drop:', err);
+    }
+  };
+
   if (isEditing) {
     return (
       <div 
@@ -330,6 +383,8 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
             });
           }
         }}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
         style={{ minHeight: '32px', height: '100%' }}
       >
         <div className="flex items-center justify-center w-full h-full">
@@ -345,6 +400,11 @@ const CourseCell: React.FC<CourseCellProps> = ({ course, onAdd, onUpdate, onRemo
         course.isRetake ? 'retake-course' : ''
       }`}
       onClick={handleClick}
+      draggable={!isAnyEditing}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
       style={{ minHeight: '32px', height: '32px', maxWidth: '100%' }}
     >
       <div className="flex-grow pr-10">

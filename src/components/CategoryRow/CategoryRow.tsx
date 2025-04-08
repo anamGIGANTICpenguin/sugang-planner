@@ -17,6 +17,8 @@ interface CategoryRowProps {
   onDragStart: () => void;
   onDragEnd: () => void;
   isDragging: boolean;
+  onCourseDragStart: () => void;
+  onCourseDragEnd: () => void;
 }
 
 const CategoryRow: React.FC<CategoryRowProps> = ({
@@ -32,6 +34,8 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
   onDragStart,
   onDragEnd,
   isDragging,
+  onCourseDragStart,
+  onCourseDragEnd,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [categoryName, setCategoryName] = useState(category.name);
@@ -87,6 +91,22 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
       return total + (course.grade === 'F' ? 0 : course.credits);
     }, 0);
   }, 0);
+
+  const handleCourseDrop = (course: Course, targetSemesterId: string, sourceSemesterId: string) => {
+    onCourseDragEnd(); // Add this
+    // First remove from source semester
+    removeCourse(category.id, sourceSemesterId, course.id);
+    
+    // Then add to target semester
+    addCourse(category.id, targetSemesterId, {
+      name: course.name,
+      credits: course.credits,
+      grade: course.grade,
+      gpaValue: course.gpaValue,
+      isRetake: course.isRetake,
+      isEnglish: course.isEnglish,
+    });
+  };
 
   return (
     <div className={`category-row transition-all duration-200 ${
@@ -269,11 +289,17 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                   <CourseCell
                     key={course.id}
                     course={course}
+                    categoryId={category.id}
+                    semesterId={semester.id}
                     onAdd={() => {}} // Not used for existing courses
                     onUpdate={(courseId, updates) => updateCourse(category.id, semester.id, courseId, updates)}
                     onRemove={() => removeCourse(category.id, semester.id, course.id)}
+                    onDrop={(draggedCourse, targetSemId, sourceSemId) => 
+                      handleCourseDrop(draggedCourse, targetSemId, sourceSemId)}
                     isAnyEditing={isAnyEditing}
                     onEditStateChange={onEditStateChange}
+                    onDragStart={onCourseDragStart}
+                    onDragEnd={onCourseDragEnd}
                   />
                 ))}
                 
@@ -281,11 +307,16 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                 <div className="flex-grow">
                   <CourseCell
                     key={`empty-${semester.id}-${category.id}`}
+                    categoryId={category.id}
+                    semesterId={semester.id}
                     onAdd={(newCourse) => !isAnyEditing && addCourse(category.id, semester.id, newCourse)}
                     onUpdate={(courseId, updates) => updateCourse(category.id, semester.id, courseId, updates)}
                     onRemove={(courseId) => removeCourse(category.id, semester.id, courseId)}
+                    onDrop={handleCourseDrop}
                     isAnyEditing={isAnyEditing}
                     onEditStateChange={onEditStateChange}
+                    onDragStart={onCourseDragStart}
+                    onDragEnd={onCourseDragEnd}
                   />
                 </div>
               </div>

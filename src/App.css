@@ -545,3 +545,32 @@ main.overflow-x-auto::-webkit-scrollbar-thumb {
     transform: translateY(0);
   }
 }
+
+/* Drag and drop styles */
+.cell.filled[draggable="true"] {
+  cursor: move;
+}
+
+.cell.filled[draggable="true"]:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cell.filled[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.cell.filled.opacity-50 {
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+/* Drop target styles */
+.cell.empty.drop-target {
+  background-color: rgba(139, 0, 41, 0.1);
+  border: 2px dashed rgba(139, 0, 41, 0.3);
+}
+
+.dark .cell.empty.drop-target {
+  background-color: rgba(159, 18, 57, 0.1);
+  border: 2px dashed rgba(159, 18, 57, 0.3);
+}
