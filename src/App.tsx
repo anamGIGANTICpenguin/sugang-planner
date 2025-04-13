@@ -1,15 +1,17 @@
 // src/App.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import CourseGrid from './components/CourseGrid/CourseGrid';
 import { useCourseStore } from './store/courseStore';
 import './App.css';
 import tigerLogo from './assets/tigerlogo.svg'; // Import the tiger logo
-import cubadultImage from './assets/cubadult.png';
 import GPAGraph from './components/Summary/GPAGraph';
 import Instructions from './components/Common/Instructions';
 import GradeScaleToggle from './components/Common/GradeScaleToggle';
+import About from './components/About/About';
 
 const App: React.FC = () => {
+  const [showAbout, setShowAbout] = useState(false);
+
   // Get data for summary display in header
   const { categories, semesters } = useCourseStore();
 
@@ -212,18 +214,32 @@ const App: React.FC = () => {
 
       <footer className="bg-[#FEF9E1] dark:bg-gray-900 py-6">
         <div className="container mx-auto px-4 text-center">
-          <div className="mb-4">
-            <img 
-              src={cubadultImage} 
-              alt="Cub Adult" 
-              className="w-40 h-auto opacity-50 hover:opacity-100 transition-opacity duration-300 mx-auto"
-            />
+          
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowAbout(true)}
+                className="text-xs text-gray-400 hover:text-[#8B0029] dark:hover:text-[#F8F2DE] transition-colors"
+              >
+                About
+              </button>
+              <a
+                href="https://pf.kakao.com/_xnrxnwn"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-gray-400 hover:text-[#8B0029] dark:hover:text-[#F8F2DE] transition-colors"
+              >
+                건의하기
+              </a>
+            </div>
+            <p className="text-xs text-gray-400">
+              여러분의 졸업을 응원하는 호랭이 © {new Date().getFullYear()}
+            </p>
           </div>
-          <p className="text-xs text-gray-400">
-            여러분의 졸업을 응원하는 호랭이 © {new Date().getFullYear()}
-          </p>
         </div>
       </footer>
+
+      {showAbout && <About onClose={() => setShowAbout(false)} />}
     </div>
   );
 };
