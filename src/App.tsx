@@ -227,13 +227,13 @@ const App: React.FC = () => {
                       to="/about"
                       className="text-xs text-gray-400 hover:text-[#8B0029] dark:hover:text-[#F8F2DE] transition-colors"
                     >
-                      About / 사이트 소개
+                      About/사이트 소개
                     </Link>
                     <Link
                       to="/privacy"
                       className="text-xs text-gray-400 hover:text-[#8B0029] dark:hover:text-[#F8F2DE] transition-colors"
                     >
-                      Privacy Policy / 개인정보처리방침
+                      Privacy Policy/개인정보처리방침
                     </Link>
                     <a
                       href="https://pf.kakao.com/_xnrxnwn"
@@ -241,7 +241,7 @@ const App: React.FC = () => {
                       rel="noopener noreferrer"
                       className="text-xs text-gray-400 hover:text-[#8B0029] dark:hover:text-[#F8F2DE] transition-colors"
                     >
-                      Contact / 건의하기
+                      Contact/건의하기
                     </a>
                   </div>
                   <p className="text-xs text-gray-400">
