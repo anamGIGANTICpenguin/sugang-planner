@@ -56,8 +56,11 @@ const About: React.FC = () => {
             <section>
               <h3 className="font-bold text-lg mb-2 text-[#8B0029] dark:text-[#F8F2DE]">Special Thanks to</h3>
               <ul className="list-disc list-inside text-sm space-y-1">
+                <li>고려대 기계공학부 22학번 mnku</li>
+                <li>고려대 중어중문학과 22학번 애기능학식팟</li>
+                <li>고려대 전기전자공학부 20학번 태나라태</li>
                 <li>테스트를 도와준 동기들</li>
-                <li>이미지를 제공해 준 GPT</li>
+                <li>이미지를 제공해 준 GPT4o</li>
                 <li>고려대의 모든 호랭이들</li>
               </ul>
             </section>
