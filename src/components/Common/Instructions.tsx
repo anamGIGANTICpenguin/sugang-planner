@@ -33,11 +33,19 @@ const Instructions: React.FC = () => {
         }`}
       >
         <div className="space-y-4">
+          
           <section>
             <h3 className="font-bold mb-2 text-xl text-[#8B0029] dark:text-[#F8F2DE]">수강 계획을 한눈에 정리하고 싶은 사람이 만든 웹 어플리케이션</h3>
             <p className="text-xs">
             노트북, 태블릿 등 넓은 화면에서 사용하는 것을 권장합니다.
             </p>  
+          </section>
+
+          <section>
+            <h3 className="font-bold mb-2 text-[#8B0029] dark:text-[#F8F2DE]">데이터 저장</h3>
+            <p className="text-sm">
+              모든 데이터는 자동으로 브라우저에 저장되며, 브라우저 데이터를 삭제하지 않는 한 유지됩니다.
+            </p>
           </section>
 
           <section>
@@ -67,12 +75,6 @@ const Instructions: React.FC = () => {
             </ul>
           </section>
           
-          <section>
-            <h3 className="font-bold mb-2 text-[#8B0029] dark:text-[#F8F2DE]">데이터 저장</h3>
-            <p className="text-sm">
-              모든 데이터는 자동으로 브라우저에 저장되며, 브라우저 데이터를 삭제하지 않는 한 유지됩니다.
-            </p>
-          </section>
         </div>
       </div>
     </div>

@@ -33,7 +33,7 @@ const About: React.FC = () => {
             <section>
               <h3 className="font-bold text-lg mb-2 text-[#8B0029] dark:text-[#F8F2DE]">만든이</h3>
               <p className="text-sm">
-                고려대학교 전기전자공학부 소속 <span className="font-bold">휴학생</span>입니다.
+                고려대학교 전기전자공학부 소속 <span className="font-bold">학부생</span>입니다.
               </p>
             </section>
 
