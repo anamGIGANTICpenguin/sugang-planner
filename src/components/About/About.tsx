@@ -58,7 +58,7 @@ const About: React.FC = () => {
               <ul className="list-disc list-inside text-sm space-y-1">
                 <li>고려대 기계공학부 22학번 mnku</li>
                 <li>국민대 자동차운송디자인학과 23학번 나다</li>
-                <li>고려대 중어중문학과 22학번 애기능학식팟</li>
+                <li>고려대 중어중문학과 22학번 애기능학식팟(사—람,군대딍,무장김씨)</li>
                 <li>고려대 전기전자공학부 20학번 태나라태</li>
                 <li>테스트를 도와준 동기들</li>
                 <li>이미지를 제공해 준 GPT4o</li>
