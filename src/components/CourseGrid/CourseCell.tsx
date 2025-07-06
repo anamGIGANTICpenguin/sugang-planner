@@ -82,7 +82,33 @@ const CourseCell: React.FC<CourseCellProps> = ({
     if (course) {
       setCourseName(course.name || '');
       setCredits(course.credits?.toString() || '');
-      setGrade(course.grade || '');
+      
+      // Format the grade properly to match dropdown options
+      if (course.grade) {
+        // Ensure grade is properly formatted using the same logic as handleGradeCode
+        const plainLetterGrades = ['A', 'B', 'C', 'D'];
+        let formattedGrade = course.grade;
+        
+        // If it's a single letter that should have a '0' suffix
+        if (plainLetterGrades.includes(course.grade)) {
+          formattedGrade = course.grade + '0';
+        }
+        
+        // Check if the grade exists in grade options
+        const gradeExists = gradeOptions.some(option => option.value === formattedGrade);
+        if (gradeExists) {
+          setGrade(formattedGrade);
+        } else {
+          // If the grade doesn't match any option, try to find a close match
+          const similarGrade = gradeOptions.find(option => 
+            option.value.replace(/[+\-0]/g, '') === formattedGrade.replace(/[+\-0]/g, '')
+          );
+          setGrade(similarGrade?.value || '');
+        }
+      } else {
+        setGrade('');
+      }
+      
       setIsRetake(course.isRetake || false);
       setIsDropped(course.isDropped || false);
       setIsEnglish(course.isEnglish || false);
@@ -149,6 +175,8 @@ const CourseCell: React.FC<CourseCellProps> = ({
   };
 
   const handleGradeCode = (gradeText: string) => {
+    if (!gradeText) return gradeText;
+    
     // Change plain letter grades to include '0'
     const plainLetterGrades = ['A', 'B', 'C', 'D'];
     if (plainLetterGrades.includes(gradeText)) {
@@ -173,8 +201,7 @@ const CourseCell: React.FC<CourseCellProps> = ({
       const formattedGrade = handleGradeCode(grade);
       
       // Get the GPA value for the selected grade
-      const selectedGrade = gradeOptions.find(option => option.value === formattedGrade) || 
-                           gradeOptions.find(option => option.value === grade);
+      const selectedGrade = gradeOptions.find(option => option.value === formattedGrade);
       const gpaValue = selectedGrade ? selectedGrade.gpaValue : null;
       
       // Force credits to 0 if it's a retake or dropped
