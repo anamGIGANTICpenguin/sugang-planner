@@ -699,7 +699,7 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
       
       <textarea
         className="w-full h-32 p-2 border-1 rounded mb-4 dark:bg-gray-700 dark:text-white font-mono text-sm bg-gray-50"
-        placeholder="KUPID>전체성적조회>성적확정자료 하단의 표를 복사하여 붙여넣으세요"
+        placeholder="KUPID>전체성적조회 하단의 표를 복사하여 붙여넣으세요"
         value={transcriptText}
         onChange={(e) => setTranscriptText(e.target.value)}
         disabled={isLoading}
