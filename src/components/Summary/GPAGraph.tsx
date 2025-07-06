@@ -7,8 +7,9 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 } from 'chart.js';
+
 import { Line } from 'react-chartjs-2';
 import { useCourseStore } from '../../store/courseStore';
 import { useGradeScaleStore } from '../../store/gradeScaleStore';
@@ -37,6 +38,11 @@ const GPAGraph: React.FC = () => {
     categories.forEach(category => {
       const courses = category.courses[semester.id] || [];
       courses.forEach(course => {
+        // Skip retaken or dropped courses in GPA calculation
+        if (course.isRetake || course.isDropped) {
+          return; // Skip this course
+        }
+        
         if (course.gpaValue !== null && course.grade && course.grade !== 'P') {
           // Overall GPA
           totalGpaCredits += course.credits;

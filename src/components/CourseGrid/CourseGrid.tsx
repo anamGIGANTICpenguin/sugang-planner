@@ -1,19 +1,26 @@
 // src/components/CourseGrid/CourseGrid.tsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import SemesterHeader from './SemesterHeader';
 import CategoryRow from '../CategoryRow/CategoryRow';
 import CategoryManager from '../CategoryRow/CategoryManager';
 import SemesterSummary from './SemesterSummary';
 import { useCourseStore } from '../../store/courseStore';
-//import DynamicInput from '../Common/DynamicInput';
 import DropZone from '../CategoryRow/DropZone';
+import './draggable.css';
 
 const CourseGrid: React.FC = () => {
   const [isAnyEditing, setIsAnyEditing] = useState(false);
   const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
-  const [isDraggingCourse, setIsDraggingCourse] = useState(false); // Add this state
+  const [isDraggingCourse, setIsDraggingCourse] = useState(false);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+
+  // Reset drop target index when course dragging starts
+  useEffect(() => {
+    if (isDraggingCourse) {
+      setDropTargetIndex(null);
+    }
+  }, [isDraggingCourse]);
 
   const {
     categories,
@@ -71,7 +78,7 @@ const CourseGrid: React.FC = () => {
   };
 
   const findClosestDropZone = (mouseY: number) => {
-    if (!gridRef.current) return null;
+    if (!gridRef.current || isDraggingCourse) return null;
 
     const dropZones = gridRef.current.querySelectorAll('[data-dropzone]');
     let closest = null;
@@ -95,7 +102,7 @@ const CourseGrid: React.FC = () => {
   };
 
   const handleDragOver = (e: React.DragEvent) => {
-    if (!draggedCategory) return;
+    if (!draggedCategory || isDraggingCourse) return;
     
     const closestIndex = findClosestDropZone(e.clientY);
     if (closestIndex !== null) {
@@ -113,7 +120,7 @@ const CourseGrid: React.FC = () => {
         {/* Empty top-left cell with semester add button (invisible cell, visible button) */}
         <div className="p-2 relative bg-transparent border-0">
           <div 
-            className="text-center bg-[#E5D0AC] border border-[#8B0029] hover:bg-[#d4bd94] cursor-pointer text-[#333333] flex items-center justify-center rounded absolute top-1/2 right-2 transform -translate-y-1/2 dark:bg-[#202838] dark:border-[#9f1239] dark:text-[#F8F2DE] dark:hover:bg-[#2d3748]"
+            className="text-center bg-[#E5D0AC] border border-[#8B0029] cursor-pointer text-[#333333] flex items-center justify-center rounded absolute top-1/2 right-2 transform -translate-y-1/2 dark:bg-[#202838] dark:border-[#9f1239] dark:text-[#F8F2DE] dark:hover:bg-[#2d3748]"
             onClick={handleAddSemester}
             style={{ width: '25px', height: '25px' }}
             title="Add new semester"
@@ -146,7 +153,7 @@ const CourseGrid: React.FC = () => {
       {categories.map((category, index) => (
         <React.Fragment key={category.id}>
           <DropZone
-            isOver={dropTargetIndex === index}
+            isOver={dropTargetIndex === index && !isDraggingCourse}
             onDragOver={(e) => {
               e.preventDefault();
               if (!isDraggingCourse) { // Only show drop zone if not dragging a course
@@ -175,12 +182,15 @@ const CourseGrid: React.FC = () => {
           />
           {index === categories.length - 1 && (
             <DropZone
-              isOver={dropTargetIndex === categories.length}
+              isOver={dropTargetIndex === categories.length && !isDraggingCourse}
               onDragOver={(e) => {
                 e.preventDefault();
-                handleDropZoneDragOver(categories.length);
+                if (!isDraggingCourse) {
+                  handleDropZoneDragOver(categories.length);
+                }
               }}
               onDrop={handleDragEnd}
+              isDisabled={isDraggingCourse}
             />
           )}
         </React.Fragment>

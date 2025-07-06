@@ -25,7 +25,7 @@ const About: React.FC = () => {
               졸업하고싶은 호랭이
             </h2>
             <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-              version 1.0.0
+              version 2.0.0
             </p>
           </div>
 

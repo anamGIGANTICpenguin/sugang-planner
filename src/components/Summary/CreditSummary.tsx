@@ -14,13 +14,27 @@ const CreditSummary: React.FC = () => {
       const semesterCourses = category.courses[semester.id] || [];
       
       semesterCourses.forEach(course => {
-        // Add to total credits regardless of grade type
-        totalCredits += course.credits;
+        // Skip retake/dropped courses in GPA calculation
+        if (course.isRetake || course.isDropped) {
+          return; // Skip this course
+        }
         
-        // Only add to GPA calculation if it's a letter grade (not P/F)
-        if (course.gpaValue !== null && course.grade && course.grade !== 'P' && course.grade !== 'F-') {
-          totalGpaCredits += course.credits;
-          totalGpaPoints += course.credits * (course.gpaValue || 0);
+        // Add to total credits, excluding F grades
+        if (course.grade === 'F') {
+          // F grades are not counted towards completed credits
+          // but they are included in GPA calculation
+          if (course.gpaValue !== null && course.grade) {
+            totalGpaCredits += course.credits;
+            totalGpaPoints += 0; // F counts as 0.0
+          }
+        } else {
+          totalCredits += course.credits;
+          
+          // Only add to GPA calculation if it's a letter grade (not P/F)
+          if (course.gpaValue !== null && course.grade && course.grade !== 'P' && course.grade !== 'F-') {
+            totalGpaCredits += course.credits;
+            totalGpaPoints += course.credits * (course.gpaValue || 0);
+          }
         }
       });
     });

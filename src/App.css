@@ -58,6 +58,12 @@ body {
 .cell.filled:hover {
   transform: none;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background-color: #E5D0AC; /* Keep the same background color on hover */
+}
+
+.dark .cell.filled:hover {
+  background-color: #1f2937; /* Dark mode: keep the same background color on hover */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Cell editing styles */
@@ -203,6 +209,8 @@ button,
 }
 
 /* Add new hover styles targeting only the course cells grid */
+/*
+
 .category-row > div > div:last-child {
   position: relative;
 }
@@ -224,7 +232,7 @@ button,
 .dark .category-row:hover > div > div:last-child::before {
   background-color: rgba(159, 18, 57, 0.1);
 }
-
+*/
 /* Update draggable styles to only apply to category cell */
 .category-row > div > div:first-child {
   cursor: default;
@@ -553,6 +561,12 @@ main.overflow-x-auto::-webkit-scrollbar-thumb {
 
 .cell.filled[draggable="true"]:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #E5D0AC; /* Keep the same background color on hover */
+}
+
+.dark .cell.filled[draggable="true"]:hover {
+  background-color: #1f2937; /* Dark mode: keep the same background color on hover */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .cell.filled[draggable="true"]:active {

@@ -14,6 +14,11 @@ const SemesterSummary: React.FC<SemesterSummaryProps> = ({ categories, semester 
   categories.forEach(category => {
     const courses = category.courses[semester.id] || [];
     courses.forEach(course => {
+      // Skip retake/dropped courses in GPA calculation
+      if (course.isRetake || course.isDropped) {
+        return; // Skip this course
+      }
+      
       // Count F grades for GPA calculation but not for completed credits
       if (course.grade === 'F') {
         totalGpaCredits += course.credits;
@@ -31,7 +36,7 @@ const SemesterSummary: React.FC<SemesterSummaryProps> = ({ categories, semester 
   const semesterGpa = totalGpaCredits > 0 ? totalGpaPoints / totalGpaCredits : 0;
 
   return (
-    <div className="flex flex-col justify-center py-1 px-1 bg-[#E5D0AC] text-center border-t border-[#8B0029]/20 dark:bg-gray-800 dark:border-[#9f1239]/20" style={{ minHeight: '40px' }}>
+    <div className="flex flex-col justify-center py-1 px-1 bg-[#E5D0AC] text-center border-t-2 border-[#8B0029] dark:bg-gray-800 dark:border-[#9f1239] rounded-b-lg" style={{ minHeight: '40px' }}>
       <div className="text-xs text-[#333333] dark:text-white">
         {totalGpaCredits > 0 ? semesterGpa.toFixed(2) : 'N/A'}
       </div>

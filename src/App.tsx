@@ -11,6 +11,7 @@ import GradeScaleToggle from './components/Common/GradeScaleToggle';
 import About from './components/About/About';
 import Privacy from './components/Privacy/Privacy';
 import ScrollToTop from './components/Common/ScrollToTop';
+import CourseImporter from './components/CourseGrid/CourseImporter';
 
 const App: React.FC = () => {
   // Get data for summary display in header
@@ -22,9 +23,13 @@ const App: React.FC = () => {
   const totalCompletedCredits = categories.reduce((sum, category) => {
     const categoryCredits = semesters.reduce((catSum, semester) => {
       const semesterCourses = category.courses[semester.id] || [];
-      return catSum + semesterCourses.reduce((courseSum, course) => 
-        // Don't count F grades towards completed credits
-        courseSum + (course.grade === 'F' ? 0 : course.credits), 0);
+      return catSum + semesterCourses.reduce((courseSum, course) => {
+        // Don't count F grades, retaken courses, or dropped courses towards completed credits
+        if (course.grade === 'F' || course.isRetake || course.isDropped) {
+          return courseSum;
+        }
+        return courseSum + course.credits;
+      }, 0);
     }, 0);
     return sum + categoryCredits;
   }, 0);
@@ -46,6 +51,11 @@ const App: React.FC = () => {
       semesterCourses.forEach(course => {
         if (course.isEnglish && !course.isRetake && course.grade !== 'F') {
           englishCourseCount++;
+        }
+        
+        // Skip retake/dropped courses in GPA calculation
+        if (course.isRetake || course.isDropped) {
+          return; // Skip this course and proceed to the next one
         }
         
         // Include F grades in GPA calculation
@@ -113,7 +123,12 @@ const App: React.FC = () => {
             </header>
 
             <main className="container mx-auto py-6 px-4 max-w-7xl overflow-x-auto">
-              <Instructions />
+              <div className="flex flex-col items-center mb-4">
+                <CourseImporter />
+                <div className="mt-2">
+                  <Instructions />
+                </div>
+              </div>
               <div className="min-w-[800px] bg-transparent mb-8"> {/* Add min-width wrapper */}
                 <CourseGrid />
               </div>
@@ -161,7 +176,7 @@ const App: React.FC = () => {
                         </div>
                       )}
                       
-                      {totalPrimaryMajorGpaCredits > 0 && (
+                      {totalPrimaryMajorGpaCredits > 0 && totalSecondaryMajorGpaCredits > 0 && (
                         <div className="text-center">
                           <span className="block text-sm">본전공</span>
                           <span className="text-2xl font-bold">{primaryMajorGpa.toFixed(2)}</span>
@@ -180,9 +195,13 @@ const App: React.FC = () => {
                       {categories.map(category => {
                         const totalCredits = semesters.reduce((sum, semester) => {
                           const semesterCourses = category.courses[semester.id] || [];
-                          return sum + semesterCourses.reduce((total, course) => 
-                            // Don't count F grades towards completed credits
-                            total + (course.grade === 'F' ? 0 : course.credits), 0);
+                          return sum + semesterCourses.reduce((total, course) => {
+                            // Don't count F grades, retaken courses, or dropped courses towards completed credits
+                            if (course.grade === 'F' || course.isRetake || course.isDropped) {
+                              return total;
+                            }
+                            return total + course.credits;
+                          }, 0);
                         }, 0);
                         
                         const completion = category.requiredCredits > 0 

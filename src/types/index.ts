@@ -5,6 +5,7 @@ export interface Course {
   grade?: string;
   gpaValue?: number | null; // GPA value for the grade, null for P/F courses
   isRetake?: boolean; // Add this flag
+  isDropped?: boolean; // Flag for dropped courses
   isEnglish?: boolean; // Add this line
 }
 

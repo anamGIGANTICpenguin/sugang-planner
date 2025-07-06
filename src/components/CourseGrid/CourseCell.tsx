@@ -20,7 +20,7 @@ interface CourseCellProps {
   onAdd: (course: Omit<Course, 'id'>) => void;
   onUpdate: (courseId: string, updates: Partial<Omit<Course, 'id'>>) => void;
   onRemove: (courseId: string) => void;
-  onDrop?: (draggedCourse: Course, targetSemesterId: string, sourceSemesterId: string) => void; // Add this prop
+  onDrop?: (draggedCourse: Course, targetSemesterId: string, sourceSemesterId: string, sourceCategoryId: string) => void; // Updated prop type
   isAnyEditing: boolean;
   onEditStateChange: (isEditing: boolean) => void;
   onDragStart?: () => void;
@@ -48,6 +48,7 @@ const CourseCell: React.FC<CourseCellProps> = ({
   const [credits, setCredits] = useState('');
   const [grade, setGrade] = useState('');
   const [isRetake, setIsRetake] = useState(false);
+  const [isDropped, setIsDropped] = useState(false);
   const [isEnglish, setIsEnglish] = useState(false);
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 });
   const cellRef = useRef<HTMLDivElement>(null);
@@ -56,21 +57,24 @@ const CourseCell: React.FC<CourseCellProps> = ({
   const getGradeColor = (grade: string): string => {
     if (!grade) return 'text-gray-600';
     
-    // A grades: Blue for A+, Dark green for A0 and A-
-    if (grade === 'A+') return 'text-blue-600';
-    if (grade === 'A0' || grade === 'A-') return 'text-green-800';
+    // A grades: Blue for A+, A0, A-
+    if (grade.startsWith('A')) return 'text-blue-600';
     
-    // B grades: Yellow
-    if (grade.startsWith('B')) return 'text-yellow-700';
+    // B grades: Green
+    if (grade.startsWith('B')) return 'text-green-600';
     
-    // C to D grades: Orange
-    if (grade.startsWith('C') || grade.startsWith('D')) return 'text-orange-600';
+    // C grades: Yellow
+    if (grade.startsWith('C')) return 'text-yellow-600';
+    
+    // D grades: Orange
+    if (grade.startsWith('D')) return 'text-orange-600';
     
     // Special grades
     if (grade === 'F') return 'text-red-600';
     if (grade === 'P') return 'text-blue-600';
+    if (grade === 'NP') return 'text-red-600';
     
-    return 'text-red-600'; // default
+    return 'text-gray-600'; // default for other grades like N/A
   };
 
   // Initialize with course data if available
@@ -80,6 +84,7 @@ const CourseCell: React.FC<CourseCellProps> = ({
       setCredits(course.credits?.toString() || '');
       setGrade(course.grade || '');
       setIsRetake(course.isRetake || false);
+      setIsDropped(course.isDropped || false);
       setIsEnglish(course.isEnglish || false);
     } else {
       // Clear fields for new empty cells
@@ -87,6 +92,7 @@ const CourseCell: React.FC<CourseCellProps> = ({
       setCredits('');  // Initialize as empty string
       setGrade('');
       setIsRetake(false);
+      setIsDropped(false);
       setIsEnglish(false);
     }
   }, [course]);
@@ -96,23 +102,28 @@ const CourseCell: React.FC<CourseCellProps> = ({
     if (isEditing && cellRef.current) {
       // Position the editing form near the click position
       if (clickPosition.x > 0 && clickPosition.y > 0) {
-        // Position the popup slightly above and to the right of the click point
-        cellRef.current.style.left = `${clickPosition.x - 20}px`;
-        cellRef.current.style.top = `${clickPosition.y - 70}px`;
-        
-        // Make sure the popup is fully visible in the viewport
-        const rect = cellRef.current.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-        
-        // Adjust if it goes off the right edge
-        if (rect.right > viewportWidth) {
-          cellRef.current.style.left = `${viewportWidth - rect.width - 10}px`;
-        }
-        
-        // Adjust if it goes off the top
-        if (rect.top < 10) {
-          cellRef.current.style.top = '10px';
-        }
+        // Add a small delay before setting position to allow smooth transition
+        setTimeout(() => {
+          if (cellRef.current) {
+            // Position the popup slightly above and to the right of the click point
+            cellRef.current.style.left = `${clickPosition.x - 20}px`;
+            cellRef.current.style.top = `${clickPosition.y - 70}px`;
+            
+            // Make sure the popup is fully visible in the viewport
+            const rect = cellRef.current.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            
+            // Adjust if it goes off the right edge
+            if (rect.right > viewportWidth) {
+              cellRef.current.style.left = `${viewportWidth - rect.width - 10}px`;
+            }
+            
+            // Adjust if it goes off the top
+            if (rect.top < 10) {
+              cellRef.current.style.top = '10px';
+            }
+          }
+        }, 10);
       }
       
       const input = cellRef.current.querySelector('input');
@@ -166,8 +177,8 @@ const CourseCell: React.FC<CourseCellProps> = ({
                            gradeOptions.find(option => option.value === grade);
       const gpaValue = selectedGrade ? selectedGrade.gpaValue : null;
       
-      // Force credits to 0 if it's a retake
-      const finalCredits = isRetake ? 0 : parsedCredits;
+      // Force credits to 0 if it's a retake or dropped
+      const finalCredits = isRetake || isDropped ? 0 : parsedCredits;
 
       if (course) {
         // Update existing course
@@ -179,6 +190,7 @@ const CourseCell: React.FC<CourseCellProps> = ({
           updates.gpaValue = gpaValue;
         }
         if (isRetake !== course.isRetake) updates.isRetake = isRetake;
+        if (isDropped !== course.isDropped) updates.isDropped = isDropped;
         if (isEnglish !== course.isEnglish) updates.isEnglish = isEnglish;
         
         if (Object.keys(updates).length > 0) {
@@ -192,6 +204,7 @@ const CourseCell: React.FC<CourseCellProps> = ({
           grade: formattedGrade || undefined,
           gpaValue: gpaValue,
           isRetake: isRetake,
+          isDropped: isDropped,
           isEnglish: isEnglish,
         });
       }
@@ -213,27 +226,56 @@ const CourseCell: React.FC<CourseCellProps> = ({
     }));
     e.dataTransfer.effectAllowed = 'move';
     e.currentTarget.classList.add('opacity-50');
+    e.currentTarget.classList.add('dragging');
     onDragStart?.();
   };
 
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
     e.currentTarget.classList.remove('opacity-50');
+    e.currentTarget.classList.remove('dragging');
+    
+    // Remove drop-highlight from all cells
+    document.querySelectorAll('.drop-highlight').forEach(element => {
+      element.classList.remove('drop-highlight');
+    });
+    
+    // Trigger a global mousemove event to clean up any stuck plus buttons
+    document.dispatchEvent(new MouseEvent('mousemove', {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      clientX: e.clientX,
+      clientY: e.clientY
+    }));
+    
     onDragEnd?.();
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    
+    // Add a highlight class to indicate this is a valid drop target
+    e.currentTarget.classList.add('drop-highlight');
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    // Remove the highlight when dragging out
+    e.currentTarget.classList.remove('drop-highlight');
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     try {
+      // Remove highlight class
+      e.currentTarget.classList.remove('drop-highlight');
+      
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
-      if (data.sourceCategoryId !== categoryId) return; // Only allow drops within same category
-      if (data.sourceSemesterId === semesterId) return; // Prevent dropping in same semester
+      // Remove restriction on cross-category drag and drop
+      // Only prevent dropping in the same semester of the same category
+      if (data.sourceCategoryId === categoryId && data.sourceSemesterId === semesterId) return;
       if (onDrop && data.course) {
-        onDrop(data.course, semesterId, data.sourceSemesterId);
+        onDrop(data.course, semesterId, data.sourceSemesterId, data.sourceCategoryId);
       }
     } catch (err) {
       console.error('Error processing drop:', err);
@@ -243,12 +285,13 @@ const CourseCell: React.FC<CourseCellProps> = ({
   if (isEditing) {
     return (
       <div 
-        className={`cell editing p-2 border border-[#8B0029] bg-[#E5D0AC] hover:bg-[#d4bd94] rounded-lg 
-          transition-all duration-300 ease-in-out origin-top dark:bg-gray-800 dark:border-[#9f1239] dark:text-[#F8F2DE] dark:hover:bg-gray-700`}
+        className={`cell editing p-2 border border-[#8B0029] bg-[#E5D0AC] rounded-lg 
+          transition-opacity duration-200 ease-out dark:bg-gray-800 dark:border-[#9f1239] dark:text-[#F8F2DE]`}
         style={{ 
           minHeight: '160px', // Increased height to accommodate vertical layout
           zIndex: 10,
-          position: 'relative'
+          position: 'relative',
+          transition: 'opacity 200ms ease-in-out'
         }}
       >
         <div className="flex flex-col gap-2" onClick={e => e.stopPropagation()}>
@@ -258,7 +301,8 @@ const CourseCell: React.FC<CourseCellProps> = ({
             onChange={(value) => setCourseName(value)}
             onKeyDown={handleKeyDown}
             placeholder="Course name"
-            className="w-full p-1 border-0 focus:border-0 focus:ring-0 from-[#8B0029]/5 to-transparent text-xs rounded-none"
+            className="w-full p-1 border-0 focus:border-0 focus:ring-0 from-[#8B0029]/5 to-transparent rounded-none"
+            style={{ fontSize: '12px', lineHeight: '1.2' }}
             autoFocus
           />
           <div className="relative">
@@ -310,15 +354,16 @@ const CourseCell: React.FC<CourseCellProps> = ({
             <div className="flex items-center" onClick={e => e.stopPropagation()}>
               <input 
                 type="checkbox" 
-                checked={isRetake}
+                checked={isRetake || isDropped}
                 onChange={(e) => {
                   e.stopPropagation();
                   setIsRetake(e.target.checked);
+                  setIsDropped(e.target.checked);
                   if (e.target.checked) setCredits('0');
                 }}
                 className="mr-2 rounded border-gray-300"
               />
-              <label className="text-xs select-none">재수강/수강철회</label>
+              <label className="text-xs select-none">재수강/학점포기</label>
             </div>
             <div className="flex items-center" onClick={e => e.stopPropagation()}>
               <input 
@@ -339,7 +384,7 @@ const CourseCell: React.FC<CourseCellProps> = ({
               e.stopPropagation();
               submitForm();
             }}
-            className="w-full text-[#8B0029] hover:text-[#6d0020] text-xs py-1 text-center border border-[#8B0029] hover:bg-[#8B0029]/10 rounded dark:text-[#F8F2DE] dark:border-[#F8F2DE] dark:hover:bg-[#F8F2DE]/10"
+            className="w-full  text-white text-xs py-1 text-center  bg-[#8B0029] hover:bg-[#8b002aa2] rounded"
           >
             확인
           </button>
@@ -354,7 +399,7 @@ const CourseCell: React.FC<CourseCellProps> = ({
                   onEditStateChange(false);
                 }
               }}
-              className="w-full text-red-500 hover:text-red-700 text-xs py-1 text-center border border-red-500 hover:bg-red-50 rounded"
+              className="w-full text-white bg-red-500 text-xs py-1 text-center  hover:bg-red-600 rounded"
               title="Delete course"
             >
               삭제
@@ -366,9 +411,30 @@ const CourseCell: React.FC<CourseCellProps> = ({
   }
 
   if (!course) {
+    // Use a separate state to control plus button visibility
+    const [showPlus, setShowPlus] = useState(false);
+    const cellRef = useRef<HTMLDivElement>(null);
+    
+    // Add global mouse move handler to reset any stuck plus buttons
+    useEffect(() => {
+      const handleGlobalMouseMove = (e: MouseEvent) => {
+        // If the mouse is not over this cell, hide the plus
+        if (cellRef.current && !cellRef.current.contains(e.target as Node)) {
+          setShowPlus(false);
+        }
+      };
+      
+      // Clean up all plus signs on mouse move
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      return () => {
+        document.removeEventListener('mousemove', handleGlobalMouseMove);
+      };
+    }, []);
+    
     return (
       <div 
-        className={`cell empty border-0 hover:border hover:border-[#8B0029] hover:bg-[#E5D0AC] cursor-pointer text-center flex items-center justify-center group w-full h-full dark:hover:bg-[#202838] dark:hover:border-[#9f1239] ${
+        ref={cellRef}
+        className={`cell empty border-0 cursor-pointer text-center flex items-center justify-center w-full h-full ${
           isAnyEditing ? 'pointer-events-none opacity-50' : ''
         }`}
         onClick={() => {
@@ -379,16 +445,45 @@ const CourseCell: React.FC<CourseCellProps> = ({
               grade: undefined,
               gpaValue: null,
               isRetake: false,
+              isDropped: false,
               isEnglish: false
             });
           }
         }}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        style={{ minHeight: '32px', height: '100%' }}
+        onMouseEnter={() => setShowPlus(true)}
+        onMouseLeave={() => setShowPlus(false)}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          // Ensure plus is hidden during drag
+          setShowPlus(false);
+        }}
+        onDragLeave={() => {
+          // Ensure plus stays hidden after drag
+          setShowPlus(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setShowPlus(false);
+          try {
+            const data = JSON.parse(e.dataTransfer.getData('application/json'));
+            if (data.sourceCategoryId === categoryId && data.sourceSemesterId === semesterId) return;
+            if (onDrop && data.course) {
+              onDrop(data.course, semesterId, data.sourceSemesterId, data.sourceCategoryId);
+            }
+          } catch (err) {
+            console.error('Error processing drop:', err);
+          }
+        }}
+        style={{ 
+          minHeight: '32px', 
+          height: '100%'
+        }}
       >
         <div className="flex items-center justify-center w-full h-full">
-          <span className="text-lg leading-none text-[#8B0029] opacity-0 group-hover:opacity-100 transition-opacity duration-200 dark:text-[#F8F2DE]">+</span>
+          {showPlus && (
+            <span className="text-lg leading-none text-[#8B0029] dark:text-[#F8F2DE]">+</span>
+          )}
         </div>
       </div>
     );
@@ -396,20 +491,21 @@ const CourseCell: React.FC<CourseCellProps> = ({
 
   return (
     <div 
-      className={`cell filled p-2 border border-gray-200 bg-[#E5D0AC] hover:bg-[#d4bd94] cursor-pointer relative flex items-center dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 dark:text-white ${
-        course.isRetake ? 'retake-course' : ''
+      className={`cell filled p-2 border border-gray-200 bg-[#E5D0AC] cursor-pointer relative flex items-center transition-all duration-300 ease-in-out dark:bg-gray-800 dark:border-gray-700 dark:text-white ${
+        (course.isRetake || course.isDropped) ? 'retake-course' : ''
       }`}
       onClick={handleClick}
       draggable={!isAnyEditing}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       style={{ minHeight: '32px', height: '32px', maxWidth: '100%' }}
     >
       <div className="flex-grow pr-10">
-        <span className="font-bold text-xs text-[#333333] whitespace-nowrap overflow-hidden overflow-ellipsis block dark:text-white">
-          {course.name}
+        <span className="font-bold whitespace-nowrap overflow-hidden overflow-ellipsis block dark:text-white" style={{ fontSize: '12px', lineHeight: '1.2', color: '#333333' }}>
+          {course.name.replace(/\s*\(영강\)|\s*\(외국어강의\)/g, '').substring(0, 10) + (course.name.length > 10 ? '...' : '')}
         </span>
       </div>
 
@@ -418,9 +514,7 @@ const CourseCell: React.FC<CourseCellProps> = ({
           <span className="text-[10px] text-[#333333] dark:text-gray-500">({course.credits})</span>
         )}
         {course.grade && (
-          <span className={`font-medium text-xs text-right ${
-            grade.startsWith('B') ? 'text-yellow-700 dark:text-yellow-600' : getGradeColor(course.grade)
-          }`}>
+          <span className={`font-medium text-xs text-right ${getGradeColor(course.grade)}`}>
             {course.grade === 'P' || course.grade === 'F'
               ? <>{course.grade}<span className="invisible">0</span></>
               : course.grade.length === 1 && ['A', 'B', 'C', 'D'].includes(course.grade)

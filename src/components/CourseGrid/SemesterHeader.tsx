@@ -51,7 +51,7 @@ const SemesterHeader: React.FC<SemesterHeaderProps> = ({ name, onUpdate, onDelet
 
   if (isEditing) {
     return (
-      <div className="text-center p-2 bg-[#E5D0AC] dark:bg-[#202838]">
+      <div className="text-center p-2 bg-[#E5D0AC] dark:bg-[#202838] rounded-t-lg">
         <DynamicInput
           type="text"
           value={semesterName}
@@ -67,7 +67,7 @@ const SemesterHeader: React.FC<SemesterHeaderProps> = ({ name, onUpdate, onDelet
 
   return (
     <div 
-      className="text-center p-2 bg-[#E5D0AC] border-b border-[#8B0029] font-semibold hover:bg-[#d4bd94] cursor-pointer relative dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:border-[#9f1239] rounded-t-lg"
+      className="text-center p-2 bg-[#E5D0AC] border-b-2 border-[#8B0029] font-semibold cursor-pointer relative dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:border-[#9f1239] rounded-t-lg"
       onClick={handleClick}
       onMouseEnter={() => setShowDeleteButton(true)}
       onMouseLeave={() => setShowDeleteButton(false)}

@@ -87,37 +87,50 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
   const totalCredits = semesters.reduce((sum, semester) => {
     const semesterCourses = category.courses[semester.id] || [];
     return sum + semesterCourses.reduce((total, course) => {
-      // Don't count F grades towards completed credits
-      return total + (course.grade === 'F' ? 0 : course.credits);
+      // Don't count F grades, retaken courses, or dropped courses towards completed credits
+      if (course.grade === 'F' || course.isRetake || course.isDropped) {
+        return total;
+      }
+      return total + course.credits;
     }, 0);
   }, 0);
 
-  const handleCourseDrop = (course: Course, targetSemesterId: string, sourceSemesterId: string) => {
+  const handleCourseDrop = (course: Course, targetSemesterId: string, sourceSemesterId: string, sourceCategoryId?: string) => {
     onCourseDragEnd(); // Add this
-    // First remove from source semester
-    removeCourse(category.id, sourceSemesterId, course.id);
     
-    // Then add to target semester
+    // If sourceCategoryId is provided and different from current category, it's a cross-category drop
+    const isCrossCategoryDrop = sourceCategoryId && sourceCategoryId !== category.id;
+    
+    // First remove from source semester and category
+    if (isCrossCategoryDrop) {
+      removeCourse(sourceCategoryId!, sourceSemesterId, course.id);
+    } else {
+      // Same category, different semester
+      removeCourse(category.id, sourceSemesterId, course.id);
+    }
+    
+    // Then add to target semester in current category
     addCourse(category.id, targetSemesterId, {
       name: course.name,
       credits: course.credits,
       grade: course.grade,
       gpaValue: course.gpaValue,
       isRetake: course.isRetake,
+      isDropped: course.isDropped, // Add this to maintain dropped status
       isEnglish: course.isEnglish,
     });
   };
 
   return (
-    <div className={`category-row transition-all duration-200 ${
+    <div className={`category-row transition-all duration-300 ease-in-out ${
       isDragging ? 'opacity-50' : ''
     }`}>
-      <div className="grid grid-cols-[120px_1fr] gap-1">
+      <div className="grid grid-cols-[120px_1fr] gap-1 transition-all duration-300 ease-in-out">
         {/* Make only the category cell draggable */}
         <div 
-          className={`p-2 bg-[#E5D0AC] border-r-2 font-medium ${
-            isEditing ? 'border-[#8B0029]' : 'border-[#8B0029] hover:bg-[#d4bd94] cursor-move'
-          } dark:bg-gray-800 dark:text-white dark:border-[#9f1239] dark:hover:bg-gray-700`}
+          className={`p-2 bg-[#E5D0AC] border-r-2 font-medium transition-all duration-300 ease-in-out ${
+            isEditing ? 'border-[#E5D0AC]' : 'border-[#E5D0AC] cursor-move'
+          } dark:bg-gray-800 dark:text-white dark:border-gray-800 dark:hover:bg-gray-700`}
           onClick={isEditing ? undefined : handleCategoryClick}
           ref={categoryRef}
           draggable={!isEditing}
@@ -224,7 +237,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                     e.stopPropagation();
                     submitForm();
                   }}
-                  className="mt-2 w-[75px] bg-[#8B0029] text-white text-xs py-1 px-2 rounded hover:bg-[#7a0024] transition-colors"
+                  className="mt-2 w-[75px] bg-[#8B0029] text-white text-xs py-1 px-2 rounded hover:bg-[#8b002aa2] transition-colors"
                 >
                   확인
                 </button>
@@ -240,11 +253,26 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                   취소
                 </button>
               </div>
+              <div className="flex justify-center">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (window.confirm(`Are you sure you want to delete "${category.name}"?`)) {
+                      removeCategory(category.id);
+                      setIsEditing(false);
+                    }
+                  }}
+                  className="mt-0 w-[154px] bg-red-500 text-white text-xs py-1 px-2 rounded hover:bg-red-600 transition-colors"
+                >
+                  삭제
+                </button>
+              </div>
             </div>
           ) : (
             <div className="flex justify-between items-start">
               <div>
-                <div className="text-[#333333] dark:text-white">{category.name}</div>
+                <div className="text-[#333333] dark:text-white text-sm">{category.name}</div>
                 <div className="text-xs mt-1 text-[#333333] dark:text-gray-400">
                   {totalCredits}/{category.requiredCredits} 학점
                 </div>
@@ -256,17 +284,6 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                   </div>
                 )}
               </div>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (window.confirm(`Are you sure you want to delete "${category.name}"?`)) {
-                    removeCategory(category.id);
-                  }
-                }}
-                className="text-[#8B0029] hover:text-red-600 ml-2 p-1 dark:text-gray-400 dark:hover:text-red-300"
-              >
-                <span className="text-sm">×</span>
-              </button>
             </div>
           )}
         </div>
@@ -294,8 +311,8 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                     onAdd={() => {}} // Not used for existing courses
                     onUpdate={(courseId, updates) => updateCourse(category.id, semester.id, courseId, updates)}
                     onRemove={() => removeCourse(category.id, semester.id, course.id)}
-                    onDrop={(draggedCourse, targetSemId, sourceSemId) => 
-                      handleCourseDrop(draggedCourse, targetSemId, sourceSemId)}
+                    onDrop={(draggedCourse, targetSemId, sourceSemId, sourceCategoryId) => 
+                      handleCourseDrop(draggedCourse, targetSemId, sourceSemId, sourceCategoryId)}
                     isAnyEditing={isAnyEditing}
                     onEditStateChange={onEditStateChange}
                     onDragStart={onCourseDragStart}
@@ -312,7 +329,8 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                     onAdd={(newCourse) => !isAnyEditing && addCourse(category.id, semester.id, newCourse)}
                     onUpdate={(courseId, updates) => updateCourse(category.id, semester.id, courseId, updates)}
                     onRemove={(courseId) => removeCourse(category.id, semester.id, courseId)}
-                    onDrop={handleCourseDrop}
+                    onDrop={(draggedCourse, targetSemId, sourceSemId, sourceCategoryId) => 
+                      handleCourseDrop(draggedCourse, targetSemId, sourceSemId, sourceCategoryId)}
                     isAnyEditing={isAnyEditing}
                     onEditStateChange={onEditStateChange}
                     onDragStart={onCourseDragStart}
