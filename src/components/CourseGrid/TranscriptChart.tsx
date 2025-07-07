@@ -951,46 +951,30 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="p-4 bg-[white] dark:bg-gray-800 rounded-lg">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-3xl p-6 relative max-h-[80vh] overflow-y-auto">
       <h2 className="text-xl font-bold mb-4">수강 과목 업로드</h2>
       <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
         아래 텍스트박스에 KUPID - 전체성적조회 - 성적확정자료 하단의 표를 복사하여 붙여넣으세요. 
       </p>
       
-      <div className="mb-4 text-xs text-gray-500 dark:text-gray-400 pl-3 py-2 bg-blue-50 dark:bg-blue-900/20">
-        <h3 className="font-bold mb-1">새로운 3단계 데이터 처리 시스템:</h3>
-        <div className="mb-2">
-          <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">1단계: 데이터 무결성 검증</p>
-          <p className="ml-2">• 모든 필수 데이터 (년도, 학기, 학수번호, 과목명, 이수구분, 학점, 점수, 등급) 확인</p>
-          <p className="ml-2">• 데이터 형식 및 일관성 검사</p>
-        </div>
-        <div className="mb-2">
-          <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">2단계: 전공 분석</p>
-          <p className="ml-2">• '전공'이 포함된 카테고리 자동 식별</p>
-          <p className="ml-2">• 전공 과목 학수번호 접두사 분석</p>
-          <p className="ml-2">• 전공 없음: 일반 처리 | 접두사 1개: 확인 요청 | 접두사 2개 이상: 본전공/제2전공 선택</p>
-        </div>
-        <div className="mb-2">
-          <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">3단계: 과목 분류 및 배치</p>
-          <p className="ml-2">• 선택된 전공 설정에 따라 과목 자동 분류</p>
-          <p className="ml-2">• 학기별, 카테고리별 체계적 배치</p>
-        </div>
-        
-        <h3 className="font-bold mb-1 mt-3">데이터 형식 안내:</h3>
+      <div className="mb-4 text-xs text-gray-500 dark:text-gray-400 pl-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded">
         <p className="mb-2">각 줄마다 하나의 과목 정보가 다음 순서로 포함되어야 합니다:</p>
-        <p className="font-mono bg-gray-100 dark:bg-gray-700 p-1 mb-2 rounded">년도 학기 학수번호 과목명 이수구분 [교양영역] [과목유형] 학점 점수 등급 평점 [재수강년도] [재수강학기] [재수강과목] [삭제구분]</p>
-        <p className="font-mono bg-gray-100 dark:bg-gray-700 p-1 mb-2 rounded">예시: 2020	1	CHEM15107	일반화학및연습Ⅰ(영강)	교양	전공관련교양		3	100	A+	4.5	</p>
-        <ul className="list-disc pl-5 mt-2 text-xs">
+        <div className="font-mono bg-gray-100 dark:bg-gray-700 p-2 mb-2 rounded text-2xs overflow-x-auto">
+          년도 학기 학수번호 과목명 이수구분 [교양영역] [과목유형] 학점 점수 등급 평점 [재수강년도] [재수강학기] [재수강과목] [삭제구분]
+        </div>
+        <div className="font-mono bg-gray-100 dark:bg-gray-700 p-2 mb-2 rounded text-2xs overflow-x-auto">
+          예시: 2020	1	CHEM15107	일반화학및연습Ⅰ(영강)	교양	전공관련교양		3	100	A+	4.5
+        </div>
+        <ul className="list-disc pl-5 mt-2 text-xs space-y-1">
           <li>KUPID에서 표를 복사할 때 탭으로 구분된 데이터가 자동으로 복사됩니다.</li>
           <li>계절학기 및 군복무 학점은 자동으로 별도 처리됩니다.</li>
-          <li>'전공' 카테고리가 없으면 일반 교양과목으로만 처리됩니다.</li>
           <li>전공 접두사가 여러 개 발견되면 본전공/제2전공 선택 창이 나타납니다.</li>
           <li>선택되지 않은 전공 접두사는 '일반선택' 카테고리로 자동 분류됩니다.</li>
         </ul>
       </div>
       
       <textarea
-        className="w-full h-32 p-2 border-1 rounded mb-4 dark:bg-gray-700 dark:text-white font-mono text-sm bg-gray-50"
+        className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded mb-4 dark:bg-gray-700 dark:text-white font-mono text-sm bg-gray-50 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         placeholder="KUPID>전체성적조회 하단의 표를 복사하여 붙여넣으세요"
         value={transcriptText}
         onChange={(e) => setTranscriptText(e.target.value)}
@@ -998,7 +982,7 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
       />
       
       <button
-        className={`px-4 py-2 ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded-full w-full relative shadow-none`}
+        className={`px-6 py-3 ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded-lg w-full relative transition-colors duration-200 font-medium`}
         onClick={handleImport}
         disabled={isLoading}
       >
