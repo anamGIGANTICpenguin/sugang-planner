@@ -55,26 +55,26 @@ const CourseCell: React.FC<CourseCellProps> = ({
 
   // Get grade color based on grade value
   const getGradeColor = (grade: string): string => {
-    if (!grade) return 'text-gray-600';
+    if (!grade) return 'text-gray-600 dark:text-gray-400';
     
     // A grades: Blue for A+, A0, A-
-    if (grade.startsWith('A')) return 'text-blue-600';
+    if (grade.startsWith('A')) return 'text-blue-600 dark:text-blue-400';
     
     // B grades: Green
-    if (grade.startsWith('B')) return 'text-green-600';
+    if (grade.startsWith('B')) return 'text-green-600 dark:text-green-400';
     
     // C grades: Yellow
-    if (grade.startsWith('C')) return 'text-yellow-600';
+    if (grade.startsWith('C')) return 'text-yellow-600 dark:text-yellow-400';
     
     // D grades: Orange
-    if (grade.startsWith('D')) return 'text-orange-600';
+    if (grade.startsWith('D')) return 'text-orange-600 dark:text-orange-400';
     
     // Special grades
-    if (grade === 'F') return 'text-red-600';
-    if (grade === 'P') return 'text-blue-600';
-    if (grade === 'NP') return 'text-red-600';
+    if (grade === 'F') return 'text-red-600 dark:text-red-400';
+    if (grade === 'P') return 'text-blue-600 dark:text-blue-400';
+    if (grade === 'NP') return 'text-red-600 dark:text-red-400';
     
-    return 'text-gray-600'; // default for other grades like N/A
+    return 'text-gray-600 dark:text-gray-400'; // default for other grades like N/A
   };
 
   // Initialize with course data if available
@@ -531,14 +531,14 @@ const CourseCell: React.FC<CourseCellProps> = ({
       style={{ minHeight: '32px', height: '32px', maxWidth: '100%' }}
     >
       <div className="flex-grow pr-10">
-        <span className="font-bold whitespace-nowrap overflow-hidden overflow-ellipsis block dark:text-white" style={{ fontSize: '12px', lineHeight: '1.2', color: '#333333' }}>
+        <span className="font-bold whitespace-nowrap overflow-hidden overflow-ellipsis block text-[#333333] dark:text-white" style={{ fontSize: '12px', lineHeight: '1.2' }}>
           {course.name.replace(/\s*\(영강\)|\s*\(외국어강의\)/g, '').substring(0, 10) + (course.name.length > 10 ? '...' : '')}
         </span>
       </div>
 
       <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-baseline justify-end flex-shrink-0 bg-inherit gap-0.5">
         {course.credits !== 3 && course.credits !== 0 && (
-          <span className="text-[10px] text-[#333333] dark:text-gray-500">({course.credits})</span>
+          <span className="text-[0px] text-[#333333] dark:text-gray-300">({course.credits})</span>
         )}
         {course.grade && (
           <span className={`font-medium text-xs text-right ${getGradeColor(course.grade)}`}>

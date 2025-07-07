@@ -58,11 +58,11 @@ body {
 .cell.filled:hover {
   transform: none;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  background-color: #E5D0AC; /* Keep the same background color on hover */
 }
 
-.dark .cell.filled:hover {
-  background-color: #1f2937; /* Dark mode: keep the same background color on hover */
+.dark.cell.filled:hover {
+  transform: none;
+  background-color: #374151; /* Dark mode: use gray-700 to match semester header */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
@@ -561,11 +561,10 @@ main.overflow-x-auto::-webkit-scrollbar-thumb {
 
 .cell.filled[draggable="true"]:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: #E5D0AC; /* Keep the same background color on hover */
 }
 
-.dark .cell.filled[draggable="true"]:hover {
-  background-color: #1f2937; /* Dark mode: keep the same background color on hover */
+.dark.cell.filled[draggable="true"]:hover {
+  background-color: #374151; /* Dark mode: use gray-700 to match semester header */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
