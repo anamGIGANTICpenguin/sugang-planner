@@ -26,7 +26,7 @@ export interface Semester {
 export interface CourseGridState {
   categories: Category[];
   semesters: Semester[];
-  addCategory: (name: string, requiredCredits: number) => void;
+  addCategory: (name: string, requiredCredits: number, isMajor?: boolean) => void;
   updateCategory: (id: string, name: string, requiredCredits: number, isMajor: boolean) => void;
   removeCategory: (id: string) => void;
   addSemester: (name: string) => void;

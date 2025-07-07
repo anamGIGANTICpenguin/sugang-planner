@@ -94,7 +94,11 @@ export const addCoursesSequentially = async (
       
       // Skip if we couldn't determine the semester or category
       if (!semesterId || !categoryId) {
-        console.warn(`Skipping course ${course.courseName}: Cannot determine semester or category`);
+        const missingInfo = [];
+        if (!semesterId) missingInfo.push(`학기 정보 (${course.year}년 ${course.semester}학기)`);
+        if (!categoryId) missingInfo.push(`카테고리 정보 (${course.category})`);
+        
+        console.warn(`Skipping course ${course.courseName}: ${missingInfo.join(', ')}을(를) 찾을 수 없습니다`);
         continue;
       }
       
@@ -122,6 +126,7 @@ export const addCoursesSequentially = async (
         await new Promise(resolve => setTimeout(resolve, COURSE_DELAY));
       } catch (error) {
         console.error(`Error adding course ${course.courseName}:`, error);
+        // Continue processing other courses even if one fails
       }
     }
     

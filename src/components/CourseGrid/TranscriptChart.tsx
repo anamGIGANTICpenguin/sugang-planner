@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useCourseStore } from '../../store/courseStore';
 import { addCoursesSequentially } from './courseUtils';
 import { 
-  analyzeMajorCodePrefixes, 
   updateCategoriesBasedOnMajorSelection, 
   extractCodePrefix 
 } from './transcriptUtils';
@@ -48,15 +47,22 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
   const parseTranscriptData = (text: string): CourseData[] => {
     const lines = text.trim().split('\n');
     const parsedData: CourseData[] = [];
+    const errorMessages: string[] = [];
     
-    for (const line of lines) {
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      const line = lines[lineIndex];
       try {
         if (!line.trim()) continue; // Skip empty lines
         
-        const parts = line.trim().split(/\s+/);
+        // First try to split by tabs, then fall back to spaces if no tabs found
+        let parts = line.trim().split('\t');
+        if (parts.length === 1) {
+          // No tabs found, split by spaces
+          parts = line.trim().split(/\s+/);
+        }
         
         if (parts.length < 8) {
-          console.warn('Line has too few parts, skipping:', line);
+          errorMessages.push(`라인 ${lineIndex + 1}: 데이터가 부족합니다. 최소 8개 항목이 필요하지만 ${parts.length}개만 있습니다.\n데이터: "${line.trim()}"`);
           continue;
         }
         
@@ -121,12 +127,17 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
           continue;
         }
         
-        // Try a regex approach first for more accurate parsing
-        const regex = /^(\d{4}|\S+)\s+(\S+)\s+(\S+)\s+(.+?)\s+(교양|전공\S*|학문의기초)\s+([^\d]+|\s*)(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+([A-Z+\-]+|P)\s+(\d+(?:\.\d+)?).*$/;
-        const match = line.match(regex);
+        // Try a regex approach first for more accurate parsing - handle both tab and space separation
+        const tabRegex = /^([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]*)\t?([^\t]*)\t?(\d+(?:\.\d+)?)\t(\d+(?:\.\d+)?)\t([A-Z+\-]+|P)\t(\d+(?:\.\d+)?).*$/;
+        const spaceRegex = /^(\d{4}|\S+)\s+(\S+)\s+(\S+)\s+(.+?)\s+([^\s\d]+)\s+([^\d]*?)(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+([A-Z+\-]+|P)\s+(\d+(?:\.\d+)?).*$/;
+        
+        let match = line.match(tabRegex);
+        if (!match) {
+          match = line.match(spaceRegex);
+        }
         
         if (match) {
-          const [_, year, semester, courseCode, courseName, category, subcategory, credits, score, letterGrade, numberGrade] = match;
+          const [_, year, semester, courseCode, courseName, category, subcategory, , credits, score, letterGrade, numberGrade] = match;
           
           // Check for retake or dropped course info at the end of the line
           let isRetake = false;
@@ -137,15 +148,15 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
           }
           
           parsedData.push({
-            year,
-            semester,
-            courseCode,
+            year: year.trim(),
+            semester: semester.trim(),
+            courseCode: courseCode.trim(),
             courseName: courseName.trim(),
             category: category.trim(),
-            subcategory: subcategory.trim(),
+            subcategory: subcategory ? subcategory.trim() : '',
             credits: parseFloat(credits) || 0,
             score: parseFloat(score) || 0,
-            letterGrade,
+            letterGrade: letterGrade.trim(),
             numberGrade: parseFloat(numberGrade) || 0,
             isRetake,
             isDropped: isRetake // Set isDropped to same value as isRetake
@@ -155,10 +166,61 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
         }
         
         // Fallback to the position-based parsing approach
-        const lineParts = line.trim().split(/\s+/);
+        // First try tab separation, then space separation
+        let lineParts = line.trim().split('\t');
+        if (lineParts.length === 1) {
+          lineParts = line.trim().split(/\s+/);
+        }
         
         if (lineParts.length < 8) {
           console.warn('Line has too few parts, skipping:', line);
+          continue;
+        }
+        
+        // For tab-separated data, the structure is usually more predictable
+        if (line.includes('\t')) {
+          // Tab-separated: assume standard order
+          const year = lineParts[0] || '';
+          const semester = lineParts[1] || '';
+          const courseCode = lineParts[2] || '';
+          const courseName = lineParts[3] || '';
+          const category = lineParts[4] || '';
+          const subcategory = lineParts[5] || '';
+          // Skip potential empty fields for 과목유형
+          let creditsIndex = 6;
+          while (creditsIndex < lineParts.length && (!lineParts[creditsIndex] || lineParts[creditsIndex].trim() === '')) {
+            creditsIndex++;
+          }
+          
+          const credits = parseFloat(lineParts[creditsIndex]) || 0;
+          const score = parseFloat(lineParts[creditsIndex + 1]) || 0;
+          const letterGrade = lineParts[creditsIndex + 2] || '';
+          const numberGrade = parseFloat(lineParts[creditsIndex + 3]) || 0;
+          
+          // Check for retake or dropped course info
+          let isRetake = false;
+          for (let i = creditsIndex + 4; i < lineParts.length; i++) {
+            if (lineParts[i] === '재수강' || lineParts[i] === '학점포기') {
+              isRetake = true;
+              break;
+            }
+          }
+          
+          parsedData.push({
+            year: year.trim(),
+            semester: semester.trim(),
+            courseCode: courseCode.trim(),
+            courseName: courseName.trim(),
+            category: category.trim(),
+            subcategory: subcategory.trim(),
+            credits,
+            score,
+            letterGrade: letterGrade.trim(),
+            numberGrade,
+            isRetake,
+            isDropped: isRetake
+          });
+          
           continue;
         }
         
@@ -168,20 +230,58 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
         const courseCode = lineParts[2];
         
         // The course name might contain spaces, so we need to find where it ends
-        // Usually the course name is followed by a category like '교양' or '전공'
+        // Strategy: look for a pattern where we have non-numeric values followed by numeric values
         let courseNameEndIndex = -1;
         let categoryIndex = -1;
         
-        for (let i = 3; i < lineParts.length; i++) {
-          if (lineParts[i] === '교양' || lineParts[i].includes('전공') || lineParts[i] === '학문의기초') {
-            categoryIndex = i;
-            courseNameEndIndex = i - 1;
+        // Look for the pattern: [courseName] [category] [subcategory?] [credits] [score] [grade] [gpa]
+        // We'll identify where the numeric values start working backwards
+        let firstNumericIndex = -1;
+        for (let i = lineParts.length - 1; i >= 3; i--) {
+          if (/^\d+(\.\d+)?$/.test(lineParts[i]) || /^[A-Z][+\-]?$/.test(lineParts[i]) || lineParts[i] === 'P') {
+            firstNumericIndex = i;
+          } else {
             break;
           }
         }
         
+        if (firstNumericIndex !== -1 && firstNumericIndex >= 7) { // Need at least 4 numeric/grade values
+          // Now find the category by looking for the first non-course-name word before the numeric section
+          // Usually categories are single words or short phrases
+          for (let i = 3; i < firstNumericIndex - 3; i++) { // Leave space for at least credits, score, grade, gpa
+            const potentialCategory = lineParts[i];
+            // Check if this looks like a category (not likely to be part of a course name)
+            if (potentialCategory && !potentialCategory.match(/^[IVX]+$/) && // Not roman numerals
+                potentialCategory.length > 1) { // Not single characters
+              // This is likely our category
+              categoryIndex = i;
+              courseNameEndIndex = i - 1;
+              break;
+            }
+          }
+        }
+        
+        // If we still couldn't find it, try a different approach
         if (courseNameEndIndex === -1) {
-          console.warn('Cannot identify course name end, skipping:', line);
+          // Look for common patterns in category names or fall back to a reasonable guess
+          for (let i = 3; i < lineParts.length - 4; i++) { // Need at least 4 values for credits, score, grade, gpa
+            const word = lineParts[i];
+            // Check if this could be a category based on common patterns
+            if (word && (
+              word.includes('전공') || word.includes('교양') || word.includes('학부') || 
+              word.includes('기초') || word.includes('선택') || word.includes('필수') ||
+              word.includes('공통') || word.includes('교직') || word.includes('자유') ||
+              word.match(/^[가-힣]+$/) // Korean characters only (likely category)
+            )) {
+              categoryIndex = i;
+              courseNameEndIndex = i - 1;
+              break;
+            }
+          }
+        }
+        
+        if (courseNameEndIndex === -1) {
+          errorMessages.push(`라인 ${lineIndex + 1}: 과목명과 이수구분을 구분할 수 없습니다. 데이터 형식을 확인해주세요.\n데이터: "${line.trim()}"`);
           continue;
         }
         
@@ -244,7 +344,7 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
             letterGradeIndex = numericalIndices[numericalIndices.length - 2];
             numberGradeIndex = numericalIndices[numericalIndices.length - 1];
           } else {
-            console.warn('Cannot identify all required fields, skipping:', line);
+            errorMessages.push(`라인 ${lineIndex + 1}: 학점, 점수, 등급, 평점을 찾을 수 없습니다. 숫자와 등급 데이터를 확인해주세요.\n데이터: "${line.trim()}"`);
             continue;
           }
         }
@@ -287,8 +387,14 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
         });
         
       } catch (error) {
-        console.error('Error parsing line:', line, error);
+        errorMessages.push(`라인 ${lineIndex + 1}: 데이터 처리 중 오류가 발생했습니다. ${error instanceof Error ? error.message : '알 수 없는 오류'}\n데이터: "${line.trim()}"`);
       }
+    }
+    
+    // If there were parsing errors, throw them as a combined error
+    if (errorMessages.length > 0) {
+      const errorSummary = `데이터 파싱 중 ${errorMessages.length}개의 오류가 발생했습니다:\n\n${errorMessages.join('\n\n')}`;
+      throw new Error(errorSummary);
     }
     
     return parsedData;
@@ -359,13 +465,16 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
     const majorCategoriesMap = new Map<string, boolean>();
     const prefixSubcategoryMap = new Map<string, Set<string>>();
     
+    // Check if we have any major courses first
+    const hasMajorCourses = courseData.some(course => course.category.includes('전공'));
+    
     // First, identify major and non-major categories
     courseData.forEach(course => {
       const mainCategory = course.category.trim();
       if (mainCategory) {
         const isMajor = mainCategory.includes('전공');
         
-        if (isMajor) {
+        if (isMajor && hasMajorCourses) {
           // For major courses, check if there's a code prefix
           if (course.courseCode) {
             const prefix = extractCodePrefix(course.courseCode);
@@ -391,7 +500,7 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
             majorCategoriesMap.set(mainCategory, true);
           }
         } else {
-          // Non-major category
+          // Non-major category - add all unique categories
           nonMajorCategories.set(mainCategory, false);
         }
       }
@@ -407,49 +516,60 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
       addCategory(categoryName, 0);  // Non-major uses default isMajor=false
     });
     
-    // Then add major categories with specific subcategories
-    prefixSubcategoryMap.forEach((subcategories, prefix) => {
-      subcategories.forEach(subcategory => {
-        // Create prefixed subcategories (e.g., "COMP 전공필수", "COMP 전공선택")
-        const categoryName = `${prefix} ${subcategory}`;
-        majorCategoriesMap.set(categoryName, true);
+    // Only process major categories if we have major courses
+    if (hasMajorCourses) {
+      // Then add major categories with specific subcategories
+      prefixSubcategoryMap.forEach((subcategories, prefix) => {
+        subcategories.forEach(subcategory => {
+          // Create prefixed subcategories (e.g., "COMP 전공필수", "COMP 전공선택")
+          const categoryName = `${prefix} ${subcategory}`;
+          majorCategoriesMap.set(categoryName, true);
+        });
       });
-    });
-    
-    // Add any other major categories that don't have prefixes
-    Array.from(majorCategoriesMap.keys()).forEach(categoryName => {
-      // First create the basic category
-      addCategory(categoryName, 0);
       
-      // Then update it to set isMajor to true
-      setTimeout(() => {
-        const createdCategory = useCourseStore.getState().categories.find(cat => cat.name === categoryName);
-        if (createdCategory) {
-          updateCategory(createdCategory.id, categoryName, 0, true);
-        }
-      }, 50);
-    });
-    
-    // Force a delay to ensure all categories are created
-    setTimeout(() => {
-      // Update the display of categories with appropriate flags
-      const latestCategories = useCourseStore.getState().categories;
-      latestCategories.forEach(category => {
-        if (category.isMajor) {
-          updateCategory(
-            category.id,
-            category.name,
-            category.requiredCredits,
-            true
-          );
-        }
+      // Add any other major categories that don't have prefixes
+      Array.from(majorCategoriesMap.keys()).forEach(categoryName => {
+        // First create the basic category
+        addCategory(categoryName, 0);
+        
+        // Then update it to set isMajor to true
+        setTimeout(() => {
+          const createdCategory = useCourseStore.getState().categories.find(cat => cat.name === categoryName);
+          if (createdCategory) {
+            updateCategory(createdCategory.id, categoryName, 0, true);
+          }
+        }, 50);
       });
-    }, 100);
+      
+      // Force a delay to ensure all categories are created
+      setTimeout(() => {
+        // Update the display of categories with appropriate flags
+        const latestCategories = useCourseStore.getState().categories;
+        latestCategories.forEach(category => {
+          if (category.isMajor) {
+            updateCategory(
+              category.id,
+              category.name,
+              category.requiredCredits,
+              true
+            );
+          }
+        });
+      }, 100);
+    } else {
+      console.log('No major courses found, skipping major category processing');
+    }
   };
 
   // Handle major selection from the modal
   const handleMajorSelection = (primaryPrefix: string, secondaryPrefix: string, otherPrefixes: string[]) => {
     setShowMajorModal(false);
+    
+    console.log('Major selection completed:', {
+      primary: primaryPrefix,
+      secondary: secondaryPrefix,
+      others: otherPrefixes
+    });
     
     // Get the latest categories from the store
     const latestCategories = useCourseStore.getState().categories;
@@ -468,11 +588,22 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
   };
 
   // Function to continue with course import after major selection or if no selection is needed
-  const continueWithCourseImport = async () => {
+  const continueWithCourseImport = async (courseData?: CourseData[]) => {
     try {
+      // Use the passed courseData or fall back to the state
+      const dataToProcess = courseData || parsedCourseData;
+      console.log('=== DEBUG: continueWithCourseImport called ===');
+      console.log('Course data passed as parameter:', courseData?.length);
+      console.log('Course data from state:', parsedCourseData.length);
+      console.log('Data to process length:', dataToProcess.length);
+      
       // Use the latest state
       const latestSemesters = useCourseStore.getState().semesters;
       const latestCategories = useCourseStore.getState().categories;
+      
+      // Check if we have any major courses in our parsed data
+      const hasMajorCourses = dataToProcess.some(course => course.category.includes('전공'));
+      console.log('Has major courses in parsed data:', hasMajorCourses);
       
       // Find the 일반선택 category if it exists
       let generalElectiveCategory = latestCategories.find(cat => cat.name === '일반선택');
@@ -491,10 +622,10 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
         }
       }
       
-      // Find categories marked for removal
-      const categoriesToRemove = latestCategories.filter(cat => 
-        cat.name.startsWith('_TO_REMOVE_')
-      );
+      // Find categories marked for removal (only relevant if we have major courses)
+      const categoriesToRemove = hasMajorCourses ? 
+        latestCategories.filter(cat => cat.name.startsWith('_TO_REMOVE_')) : 
+        [];
       console.log('Categories marked for removal:', categoriesToRemove);
       
       // Create mappings from the latest state
@@ -520,25 +651,28 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
         return acc;
       }, {} as Record<string, string>);
       
-      // Create prefix-to-category map for major courses
-      const prefixCategoryMap = latestCategories.reduce((acc, category) => {
-        if (category.isMajor && !category.name.startsWith('_TO_REMOVE_')) {
-          // Extract prefix from category name (e.g., "COMP 전공필수" -> "COMP")
-          const prefixMatch = category.name.match(/^([A-Z]+)\s+/);
-          if (prefixMatch) {
-            const prefix = prefixMatch[1];
-            // If we haven't seen this prefix yet, or if this is a general category for the prefix
-            // Add it to the map for fallback in case no exact subcategory match is found
-            if (!acc[prefix] || !category.name.includes(' ')) {
-              acc[prefix] = category.id;
+      // Create prefix-to-category map for major courses (only if we have major courses)
+      const prefixCategoryMap = hasMajorCourses ? 
+        latestCategories.reduce((acc, category) => {
+          if (category.isMajor && !category.name.startsWith('_TO_REMOVE_')) {
+            // Extract prefix from category name (e.g., "COMP 전공필수" -> "COMP")
+            const prefixMatch = category.name.match(/^([A-Z]+)\s+/);
+            if (prefixMatch) {
+              const prefix = prefixMatch[1];
+              // If we haven't seen this prefix yet, or if this is a general category for the prefix
+              // Add it to the map for fallback in case no exact subcategory match is found
+              if (!acc[prefix] || !category.name.includes(' ')) {
+                acc[prefix] = category.id;
+              }
             }
           }
-        }
-        return acc;
-      }, {} as Record<string, string>);
+          return acc;
+        }, {} as Record<string, string>) :
+        {};
       
       // For prefixes from categories marked for removal, direct them to 일반선택 if it exists
-      if (generalElectiveCategory) {
+      if (generalElectiveCategory && hasMajorCourses) {
+        console.log('Processing categories marked for removal...');
         categoriesToRemove.forEach(category => {
           const prefixMatch = category.name.match(/^_TO_REMOVE_([A-Z]+)\s+/);
           if (prefixMatch) {
@@ -547,23 +681,60 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
             prefixCategoryMap[prefix] = generalElectiveCategory.id;
           }
         });
+        console.log('Finished processing categories marked for removal');
+      } else {
+        console.log('Skipping category removal processing:', {
+          hasGeneralElective: !!generalElectiveCategory,
+          hasMajorCourses,
+          categoriesToRemoveCount: categoriesToRemove.length
+        });
       }
       
+      console.log('=== DEBUG: About to log mapping information ===');
       console.log('Semester Map for adding courses:', semesterMap);
       console.log('Category Map for adding courses:', categoryMap);
       console.log('Prefix Category Map for adding courses:', prefixCategoryMap);
+      console.log('=== DEBUG: Mapping information logged successfully ===');
+      
+      console.log('=== DEBUG: About to call addCoursesSequentially ===');
+      console.log('Parsed course data count:', dataToProcess.length);
+      console.log('First few courses:', dataToProcess.slice(0, 3));
+      
+      // Validate that we have the required data before proceeding
+      if (dataToProcess.length === 0) {
+        console.error('No course data to process');
+        throw new Error('과목 데이터가 없습니다.');
+      }
+      
+      if (Object.keys(semesterMap).length === 0) {
+        console.error('No semester mapping available');
+        throw new Error('학기 정보가 없습니다.');
+      }
+      
+      if (Object.keys(categoryMap).length === 0) {
+        console.error('No category mapping available');
+        throw new Error('카테고리 정보가 없습니다.');
+      }
+      
+      console.log('=== DEBUG: Validation passed, calling addCoursesSequentially ===');
       
       // Add courses with the latest state
       const successCount = await addCoursesSequentially(
-        parsedCourseData,
+        dataToProcess,
         semesterMap,
         categoryMap,
         prefixCategoryMap,
         useCourseStore.getState().addCourse
-      ) || 0;
+      ).catch(error => {
+        console.error('=== ERROR in addCoursesSequentially ===', error);
+        throw error;
+      }) || 0;
       
-      // After adding courses, remove the categories marked for removal
-      if (categoriesToRemove.length > 0) {
+      console.log('=== DEBUG: addCoursesSequentially completed successfully ===');
+      console.log('Success count:', successCount);
+      
+      // After adding courses, remove the categories marked for removal (only if we have major courses)
+      if (categoriesToRemove.length > 0 && hasMajorCourses) {
         console.log('Removing categories marked for deletion:', categoriesToRemove);
         categoriesToRemove.forEach(category => {
           useCourseStore.getState().removeCategory(category.id);
@@ -574,24 +745,109 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
       
       // Final confirmation
       if (successCount > 0) {
-        alert(`${successCount}개의 과목을 성공적으로 불러왔습니다.`);
+        const majorMessage = hasMajorCourses ? '' : ' (전공 과목 없음)';
+        alert(`${successCount}개의 과목을 성공적으로 불러왔습니다${majorMessage}.`);
         if (onSuccess) {
           onSuccess(); // Call the onSuccess callback if provided
         }
       } else {
-        alert('과목 추가 중 문제가 발생했습니다. 개발자 콘솔을 확인해주세요.');
+        alert('과목 추가 중 문제가 발생했습니다. 다음을 확인해주세요:\n\n1. 모든 과목에 학점, 점수, 등급, 평점이 올바르게 입력되었는지\n2. 년도와 학기 정보가 올바른지\n3. 이수구분이 명확히 구분되어 있는지\n4. 데이터가 탭 또는 공백으로 구분되어 있는지');
       }
     } catch (error) {
       console.error('Error importing courses:', error);
       setIsLoading(false);
-      alert('데이터 처리 중 오류가 발생했습니다.');
+      
+      // Provide specific error message based on the error type
+      if (error instanceof Error) {
+        if (error.message.includes('데이터 파싱')) {
+          // This is a parsing error with detailed information
+          alert(`데이터 업로드 실패:\n\n${error.message}\n\n해결 방법:\n1. KUPID에서 성적표를 다시 복사해주세요\n2. 각 줄이 탭으로 구분되어 있는지 확인해주세요\n3. 누락된 데이터가 있는지 확인해주세요`);
+        } else {
+          alert(`데이터 처리 중 오류가 발생했습니다:\n\n${error.message}\n\n데이터 형식을 확인하고 다시 시도해주세요.`);
+        }
+      } else {
+        alert('알 수 없는 오류가 발생했습니다. 데이터 형식을 확인하고 다시 시도해주세요.');
+      }
     }
   };
 
   // Cancel major selection and continue with normal import
   const handleMajorSelectionCancel = () => {
+    console.log('Major selection cancelled by user');
     setShowMajorModal(false);
+    // When cancelled, treat all major prefixes as general electives
     continueWithCourseImport();
+  };
+
+  // Step 1: Validate data integrity
+  const validateDataIntegrity = (courseData: CourseData[]): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    
+    // Check if we have any data
+    if (courseData.length === 0) {
+      errors.push('유효한 데이터를 찾을 수 없습니다.');
+      return { isValid: false, errors };
+    }
+    
+    // Check for essential fields in each course
+    courseData.forEach((course, index) => {
+      if (!course.year || !course.semester) {
+        errors.push(`라인 ${index + 1}: 년도 또는 학기 정보가 누락되었습니다.`);
+      }
+      if (!course.courseCode || !course.courseName) {
+        errors.push(`라인 ${index + 1}: 학수번호 또는 과목명이 누락되었습니다.`);
+      }
+      if (!course.category) {
+        errors.push(`라인 ${index + 1}: 이수구분이 누락되었습니다.`);
+      }
+      if (course.credits <= 0 || course.score < 0 || !course.letterGrade) {
+        errors.push(`라인 ${index + 1}: 학점, 점수, 또는 등급 정보가 잘못되었습니다.`);
+      }
+    });
+    
+    // Log information about course categories for debugging
+    const categories = new Set(courseData.map(course => course.category));
+    console.log('All categories found in data:', Array.from(categories));
+    
+    const majorCourses = courseData.filter(course => course.category.includes('전공'));
+    console.log(`Found ${majorCourses.length} courses with '전공' in category out of ${courseData.length} total courses`);
+    
+    return { isValid: errors.length === 0, errors };
+  };
+
+  // Step 2: Analyze major categories and prefixes
+  const analyzeMajorData = (courseData: CourseData[]): {
+    majorCategories: string[];
+    majorPrefixes: Array<{ prefix: string; count: number }>;
+    hasMajorCourses: boolean;
+  } => {
+    const majorCategories = new Set<string>();
+    const prefixCounts = new Map<string, number>();
+    let hasMajorCourses = false;
+    
+    courseData.forEach(course => {
+      // Find categories that contain '전공'
+      if (course.category.includes('전공')) {
+        hasMajorCourses = true;
+        majorCategories.add(course.category);
+        
+        // Extract course code prefix for major courses
+        const prefix = extractCodePrefix(course.courseCode);
+        if (prefix) {
+          prefixCounts.set(prefix, (prefixCounts.get(prefix) || 0) + 1);
+        }
+      }
+    });
+    
+    const majorPrefixes = Array.from(prefixCounts.entries())
+      .map(([prefix, count]) => ({ prefix, count }))
+      .sort((a, b) => b.count - a.count); // Sort by count descending
+    
+    return {
+      majorCategories: Array.from(majorCategories),
+      majorPrefixes,
+      hasMajorCourses
+    };
   };
 
   // Handle import button click
@@ -604,72 +860,93 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
     setIsLoading(true);
     
     try {
-      // Parse the transcript text
+      // Step 1: Parse and validate data integrity
+      console.log('Step 1: Parsing and validating data...');
       const courseData = parseTranscriptData(transcriptText);
       setParsedCourseData(courseData);
       
-      if (courseData.length === 0) {
-        alert('유효한 데이터를 찾을 수 없습니다. 데이터 형식을 확인해주세요.');
+      const { isValid, errors } = validateDataIntegrity(courseData);
+      if (!isValid) {
+        const errorMessage = `데이터 검증 실패:\n\n${errors.join('\n')}\n\n데이터를 수정하고 다시 시도해주세요.`;
+        alert(errorMessage);
         setIsLoading(false);
         return;
       }
       
-      console.log('Parsed course data:', courseData);
+      console.log(`Step 1 완료: ${courseData.length}개의 유효한 과목 데이터 발견`);
       
-      // Step 1: Clear everything
+      // Step 2: Analyze major categories and prefixes
+      console.log('Step 2: Analyzing major data...');
+      const { majorCategories, majorPrefixes, hasMajorCourses } = analyzeMajorData(courseData);
+      
+      console.log('Major categories found:', majorCategories);
+      console.log('Major prefixes found:', majorPrefixes);
+      console.log('Has major courses:', hasMajorCourses);
+      
+      // Step 3: Handle major selection if needed
+      console.log('Step 3: Processing major selection...');
+      
+      // Clear everything before starting
       console.log('Resetting all courses...');
       resetAllCourses();
-      
-      // Wait to ensure reset is complete
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Step 2: Configure semesters first
+      // Configure semesters and categories
       console.log('Configuring semesters...');
       configureSemesters(courseData);
-      
-      // Step 3: Wait for semesters to be created
       await new Promise(resolve => setTimeout(resolve, 500));
-      console.log('Semesters after creation:', semesters);
       
-      if (semesters.length === 0) {
-        console.error('No semesters were created.');
-        alert('학기 설정 중 오류가 발생했습니다.');
-        setIsLoading(false);
-        return;
-      }
-      
-      // Step 4: Configure categories
       console.log('Configuring categories...');
       configureCategories(courseData);
-      
-      // Step 5: Wait for categories to be created
       await new Promise(resolve => setTimeout(resolve, 500));
-      console.log('Categories after creation:', categories);
       
-      if (categories.length === 0) {
-        console.error('No categories were created.');
-        alert('카테고리 설정 중 오류가 발생했습니다.');
-        setIsLoading(false);
-        return;
-      }
-      
-      // Step 6: Check for multiple major code prefixes
-      const majorPrefixes = analyzeMajorCodePrefixes(courseData);
-      console.log('Major prefixes found:', majorPrefixes);
-      
-      // If multiple major prefixes are found, show the modal for selection
-      if (majorPrefixes.length >= 2) {
+      // Handle major analysis and selection based on whether we have major courses
+      if (!hasMajorCourses) {
+        // No major courses found, proceed with normal import
+        console.log('No major courses found, proceeding with normal import');
+        continueWithCourseImport(courseData);
+      } else if (majorPrefixes.length >= 2) {
+        // Multiple major prefixes found
+        console.log(`Multiple major prefixes found: ${majorPrefixes.map(p => p.prefix).join(', ')}`);
         setMajorPrefixOptions(majorPrefixes);
         setShowMajorModal(true);
+      } else if (majorPrefixes.length === 1) {
+        // Single major prefix found, ask user for confirmation
+        const prefix = majorPrefixes[0].prefix;
+        console.log(`Single major prefix found: ${prefix} (${majorPrefixes[0].count} courses)`);
+        const confirmed = confirm(
+          `전공 학수번호 접두사 "${prefix}"를 발견했습니다 (${majorPrefixes[0].count}개 과목).\n이것이 귀하의 본전공이 맞습니까?\n\n확인: 본전공으로 설정\n취소: 일반선택으로 분류`
+        );
+        
+        if (confirmed) {
+          setMajorPrefixOptions(majorPrefixes);
+          setShowMajorModal(true);
+        } else {
+          // User declined, continue with normal import
+          console.log('User declined single major prefix, treating as general elective');
+          continueWithCourseImport(courseData);
+        }
       } else {
-        // If no or just one major prefix, continue with normal import
-        continueWithCourseImport();
+        // Has major courses but no prefixes (courses without clear prefixes)
+        console.log('Has major courses but no clear prefixes, proceeding with normal import');
+        continueWithCourseImport(courseData);
       }
       
     } catch (error) {
       console.error('Error importing transcript data:', error);
-      alert('데이터 처리 중 오류가 발생했습니다. 데이터 형식을 확인해주세요.');
       setIsLoading(false);
+      
+      // Provide specific error message based on the error type
+      if (error instanceof Error) {
+        if (error.message.includes('데이터 파싱')) {
+          // This is a parsing error with detailed information
+          alert(`데이터 업로드 실패:\n\n${error.message}\n\n해결 방법:\n1. KUPID에서 성적표를 다시 복사해주세요\n2. 각 줄이 탭으로 구분되어 있는지 확인해주세요\n3. 누락된 데이터가 있는지 확인해주세요`);
+        } else {
+          alert(`데이터 처리 중 오류가 발생했습니다:\n\n${error.message}\n\n데이터 형식을 확인하고 다시 시도해주세요.`);
+        }
+      } else {
+        alert('데이터 형식에 문제가 있습니다. 다음을 확인해주세요:\n\n1. KUPID 성적표에서 표 전체를 올바르게 복사했는지\n2. 각 줄에 년도, 학기, 학수번호, 과목명, 이수구분, 학점, 점수, 등급, 평점이 포함되어 있는지\n3. 데이터가 탭으로 구분되어 있는지');
+      }
     }
   };
 
@@ -681,19 +958,34 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
       </p>
       
       <div className="mb-4 text-xs text-gray-500 dark:text-gray-400 pl-3 py-2 bg-blue-50 dark:bg-blue-900/20">
-        <h3 className="font-bold mb-1">데이터 형식 안내:</h3>
+        <h3 className="font-bold mb-1">새로운 3단계 데이터 처리 시스템:</h3>
+        <div className="mb-2">
+          <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">1단계: 데이터 무결성 검증</p>
+          <p className="ml-2">• 모든 필수 데이터 (년도, 학기, 학수번호, 과목명, 이수구분, 학점, 점수, 등급) 확인</p>
+          <p className="ml-2">• 데이터 형식 및 일관성 검사</p>
+        </div>
+        <div className="mb-2">
+          <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">2단계: 전공 분석</p>
+          <p className="ml-2">• '전공'이 포함된 카테고리 자동 식별</p>
+          <p className="ml-2">• 전공 과목 학수번호 접두사 분석</p>
+          <p className="ml-2">• 전공 없음: 일반 처리 | 접두사 1개: 확인 요청 | 접두사 2개 이상: 본전공/제2전공 선택</p>
+        </div>
+        <div className="mb-2">
+          <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">3단계: 과목 분류 및 배치</p>
+          <p className="ml-2">• 선택된 전공 설정에 따라 과목 자동 분류</p>
+          <p className="ml-2">• 학기별, 카테고리별 체계적 배치</p>
+        </div>
+        
+        <h3 className="font-bold mb-1 mt-3">데이터 형식 안내:</h3>
         <p className="mb-2">각 줄마다 하나의 과목 정보가 다음 순서로 포함되어야 합니다:</p>
         <p className="font-mono bg-gray-100 dark:bg-gray-700 p-1 mb-2 rounded">년도 학기 학수번호 과목명 이수구분 [교양영역] [과목유형] 학점 점수 등급 평점 [재수강년도] [재수강학기] [재수강과목] [삭제구분]</p>
         <p className="font-mono bg-gray-100 dark:bg-gray-700 p-1 mb-2 rounded">예시: 2020	1	CHEM15107	일반화학및연습Ⅰ(영강)	교양	전공관련교양		3	100	A+	4.5	</p>
-        <p className="font-mono bg-gray-100 dark:bg-gray-700 p-1 mb-2 rounded">//[] 사이의 항목은 비워두어도 되는 항목입니다.</p>
-        <ul className="list-disc pl-5 mt-2">
-          <li>각 항목이 공백으로 구분됩니다.</li>
-          <li>계절학기는 자동으로 별도 학기로 처리됩니다.</li>
-          <li>"전공"이 포함된 이수구분은 전공으로 분류됩니다.</li>
-          <li>과목명에 "영강" 또는 "외국어강의"가 포함된 경우 영어강의로 구분됩니다.</li>
-          <li>학수번호 접두사가 2개 이상 발견되면 본전공/제2전공 선택 창이 나타납니다.</li>
-          <li>선택되지 않은 전공 접두사들은 "일반선택" 카테고리로 자동 분류됩니다.</li>
-          <li>교양영역은 비워둘 수 있습니다.</li>
+        <ul className="list-disc pl-5 mt-2 text-xs">
+          <li>KUPID에서 표를 복사할 때 탭으로 구분된 데이터가 자동으로 복사됩니다.</li>
+          <li>계절학기 및 군복무 학점은 자동으로 별도 처리됩니다.</li>
+          <li>'전공' 카테고리가 없으면 일반 교양과목으로만 처리됩니다.</li>
+          <li>전공 접두사가 여러 개 발견되면 본전공/제2전공 선택 창이 나타납니다.</li>
+          <li>선택되지 않은 전공 접두사는 '일반선택' 카테고리로 자동 분류됩니다.</li>
         </ul>
       </div>
       
