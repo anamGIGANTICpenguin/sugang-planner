@@ -13,7 +13,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ onAddCategory }) => {
 
   const handleAddClick = () => {
     // Create a new category with default values
-    onAddCategory("OO 전공", 15, true);
+    onAddCategory("새 수업 분류", 15, false);
   };
 
   const handleCancel = () => {
