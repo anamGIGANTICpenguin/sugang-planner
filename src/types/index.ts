@@ -27,7 +27,7 @@ export interface CourseGridState {
   categories: Category[];
   semesters: Semester[];
   addCategory: (name: string, requiredCredits: number, isMajor?: boolean) => void;
-  updateCategory: (id: string, name: string, requiredCredits: number, isMajor: boolean) => void;
+  updateCategory: (id: string, name: string, requiredCredits: number, isMajor: boolean, majorType?: 'primary' | 'secondary') => void;
   removeCategory: (id: string) => void;
   addSemester: (name: string) => void;
   updateSemester: (id: string, name: string) => void;
@@ -37,4 +37,5 @@ export interface CourseGridState {
   removeCourse: (categoryId: string, semesterId: string, courseId: string) => void;
   reorderCategories: (sourceIndex: number, destinationIndex: number) => void;
   resetAllCourses: () => void;
+  replacePlannerData: (categories: Category[], semesters: Semester[]) => void;
 }

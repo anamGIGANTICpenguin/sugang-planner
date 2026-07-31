@@ -33,8 +33,18 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
       }
     };
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const selectedOption = options.find(option => option.value === value);
@@ -44,6 +54,9 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
       <button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-label={placeholder}
         className={`w-full p-1 text-xs text-left bg-transparent hover:bg-white/10 rounded transition-colors ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
         } ${className}`}
@@ -56,10 +69,17 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute z-50 w-full mt-1 bg-[#E5D0AC] border border-[#8B0029]/20 rounded shadow-lg custom-dropdown-options dark:bg-gray-800 dark:border-[#9f1239]/20">
+        <div
+          role="listbox"
+          aria-label={placeholder}
+          className="absolute z-50 w-full mt-1 bg-[#E5D0AC] border border-[#8B0029]/20 rounded shadow-lg custom-dropdown-options dark:bg-gray-800 dark:border-[#9f1239]/20"
+        >
           {options.map((option) => (
             <button
               key={option.value}
+              type="button"
+              role="option"
+              aria-selected={value === option.value}
               onClick={() => {
                 onChange(option.value);
                 setIsOpen(false);

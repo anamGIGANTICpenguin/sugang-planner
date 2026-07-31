@@ -34,9 +34,20 @@ const DynamicInput: React.FC<DynamicInputProps> = ({
   
   // Only focus input when autoFocus is true
   useEffect(() => {
-    if (autoFocus && inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (!autoFocus || !inputRef.current) return;
+
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    inputRef.current.focus({ preventScroll: true });
+
+    // Some mobile/WebKit browsers still scroll a focused input despite
+    // preventScroll. Restore the page position after their focus handling.
+    window.scrollTo(scrollX, scrollY);
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo(scrollX, scrollY);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [autoFocus]);
   
   return (
@@ -51,7 +62,6 @@ const DynamicInput: React.FC<DynamicInputProps> = ({
         placeholder={placeholder}
         className={className}
         style={{ fontSize: '14px', ...style }}
-        autoFocus={autoFocus}
         min={min}
         max={max}
         step={step}

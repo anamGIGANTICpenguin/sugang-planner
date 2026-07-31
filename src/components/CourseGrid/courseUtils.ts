@@ -27,6 +27,8 @@ export const addCoursesSequentially = async (
       // Determine which semester this course belongs to
       if (course.semester.includes('계절') || course.year === '군복무중이수') {
         semesterId = semesterMap['seasonal'];
+      } else if (course.semesterGroupId) {
+        semesterId = semesterMap[course.semesterGroupId];
       } else {
         semesterId = semesterMap[`${course.year}-${course.semester}`];
       }
@@ -95,7 +97,11 @@ export const addCoursesSequentially = async (
       // Skip if we couldn't determine the semester or category
       if (!semesterId || !categoryId) {
         const missingInfo = [];
-        if (!semesterId) missingInfo.push(`학기 정보 (${course.year}년 ${course.semester}학기)`);
+        if (!semesterId) {
+          missingInfo.push(
+            `학기 정보 (${course.semesterLabel || `${course.year}년 ${course.semester}학기`})`
+          );
+        }
         if (!categoryId) missingInfo.push(`카테고리 정보 (${course.category})`);
         
         console.warn(`Skipping course ${course.courseName}: ${missingInfo.join(', ')}을(를) 찾을 수 없습니다`);

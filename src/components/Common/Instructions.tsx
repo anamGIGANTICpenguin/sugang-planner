@@ -19,10 +19,14 @@ const Instructions: React.FC = () => {
   }, [isOpen]);
 
   return (
-    <div className="mb-2">
+    <div>
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 mx-auto px-4 py-2 bg-[#8B0029] text-white rounded-lg hover:bg-[#6d0020] transition-colors duration-200 dark:bg-[#9f1239] dark:hover:bg-[#881337]"
+        className="toolbar-secondary-control mx-auto flex min-h-10 items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition"
+        aria-expanded={isOpen}
+        aria-controls="instructions-dialog"
+        aria-haspopup="dialog"
       >
         <span>사용 설명서</span>
         <svg
@@ -30,6 +34,7 @@ const Instructions: React.FC = () => {
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -50,10 +55,19 @@ const Instructions: React.FC = () => {
             }
           }}
         >
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-3xl p-6 relative max-h-[80vh] overflow-y-auto">
+          <div
+            id="instructions-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="instructions-title"
+            className="relative max-h-[80vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-[#8B0029]/15 bg-[#FEF9E1] p-6 text-[#333333] shadow-xl dark:border-white/10 dark:bg-gray-800 dark:text-[#F8F2DE]"
+          >
             <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+              type="button"
+              className="absolute right-3 top-3 rounded-md p-1 text-gray-500 hover:bg-[#E5D0AC]/60 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
               onClick={() => setIsOpen(false)}
+              aria-label="사용 설명서 닫기"
+              autoFocus
             >
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
@@ -61,6 +75,7 @@ const Instructions: React.FC = () => {
                 fill="none" 
                 viewBox="0 0 24 24" 
                 stroke="currentColor"
+                aria-hidden="true"
               >
                 <path 
                   strokeLinecap="round" 
@@ -73,7 +88,7 @@ const Instructions: React.FC = () => {
             
             <div className="space-y-4">
               <section>
-                <h3 className="font-bold mb-2 text-xl text-[#8B0029] dark:text-[#F8F2DE]">수강 계획을 한눈에 정리하고 싶은 사람이 만든 웹 어플리케이션</h3>
+                <h3 id="instructions-title" className="font-bold mb-2 text-xl text-[#8B0029] dark:text-[#F8F2DE]">수강 계획을 한눈에 정리하고 싶은 사람이 만든 웹 어플리케이션</h3>
                 <p className="text-xs">
                 노트북, 태블릿 등 넓은 화면에서 사용하는 것을 권장합니다.
                 </p>  

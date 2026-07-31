@@ -1,5 +1,5 @@
 // src/App.tsx
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import CourseGrid from './components/CourseGrid/CourseGrid';
 import { useCourseStore } from './store/courseStore';
@@ -12,6 +12,237 @@ import About from './components/About/About';
 import Privacy from './components/Privacy/Privacy';
 import ScrollToTop from './components/Common/ScrollToTop';
 import CourseImporter from './components/CourseGrid/CourseImporter';
+import PlanBackup from './components/Common/PlanBackup';
+import ThemeToggle from './components/themeToggle';
+
+const HEADER_COLLAPSE_DISTANCE = 180;
+
+const AdaptiveHeader: React.FC = () => {
+  const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    let animationFrame = 0;
+    let collapseProgress = 0;
+    let lastTouchY: number | null = null;
+    const previousScrollRestoration = window.history.scrollRestoration;
+    const previousBodyOverflow = document.body.style.overflow;
+
+    const syncPageScrollLock = () => {
+      document.body.style.overflow =
+        collapseProgress < 1 && window.scrollY <= 0 ? 'hidden' : previousBodyOverflow;
+    };
+
+    const renderHeader = () => {
+      animationFrame = 0;
+
+      const header = headerRef.current;
+      if (!header) return;
+
+      const isMobile = window.innerWidth < 640;
+      const progress = collapseProgress;
+
+      const expandedLogoHeight = isMobile ? 116 : 152;
+      const compactTitleLineHeight = isMobile ? 20 : 24;
+      const expandedTitleFontSize = isMobile ? 20 : 24;
+      const expandedTitleLineHeight = isMobile ? 24 : 30;
+      const compactTitleFontSize = isMobile ? 16 : 20;
+      const compactHeaderHeight = isMobile ? 60 : 68;
+      const expandedLogoTop = 8;
+      const compactLogoTop = isMobile ? -12 : -18;
+      const expandedTitleTop = expandedLogoTop + expandedLogoHeight + 4;
+      const expandedHeaderHeight = expandedTitleTop + expandedTitleLineHeight + 12;
+      const headerHeight =
+        expandedHeaderHeight + (compactHeaderHeight - expandedHeaderHeight) * progress;
+      const logoTop = expandedLogoTop + (compactLogoTop - expandedLogoTop) * progress;
+      const titleFontSize =
+        expandedTitleFontSize + (compactTitleFontSize - expandedTitleFontSize) * progress;
+      const titleLineHeight =
+        expandedTitleLineHeight +
+        (compactTitleLineHeight - expandedTitleLineHeight) * progress;
+      const titleTop =
+        expandedTitleTop + (compactHeaderHeight / 2 - expandedTitleTop) * progress;
+      const compactLogoLeft = 16;
+      const compactTitleLeft = isMobile ? 112 : 148;
+      const centerPercentage = 50 * (1 - progress);
+      const logoPixelOffset = compactLogoLeft * progress;
+      const titlePixelOffset = compactTitleLeft * progress;
+      const horizontalTranslation = -50 * (1 - progress);
+      const verticalTranslation = -50 * progress;
+
+      header.style.setProperty('--adaptive-header-height', `${headerHeight}px`);
+      header.style.setProperty(
+        '--adaptive-logo-left',
+        `calc(${centerPercentage}% + ${logoPixelOffset}px)`
+      );
+      header.style.setProperty('--adaptive-logo-top', `${logoTop}px`);
+      header.style.setProperty('--adaptive-logo-height', `${expandedLogoHeight}px`);
+      header.style.setProperty('--adaptive-brand-translate-x', `${horizontalTranslation}%`);
+      header.style.setProperty(
+        '--adaptive-title-left',
+        `calc(${centerPercentage}% + ${titlePixelOffset}px)`
+      );
+      header.style.setProperty('--adaptive-title-top', `${titleTop}px`);
+      header.style.setProperty('--adaptive-title-font-size', `${titleFontSize}px`);
+      header.style.setProperty('--adaptive-title-line-height', `${titleLineHeight}px`);
+      header.style.setProperty('--adaptive-title-translate-y', `${verticalTranslation}%`);
+    };
+
+    const scheduleHeaderRender = () => {
+      if (animationFrame === 0) {
+        animationFrame = window.requestAnimationFrame(renderHeader);
+      }
+    };
+
+    const setCollapseProgress = (nextProgress: number) => {
+      collapseProgress = Math.min(Math.max(nextProgress, 0), 1);
+      syncPageScrollLock();
+      scheduleHeaderRender();
+    };
+
+    const shouldBypassHeaderStage = (target: EventTarget | null) =>
+      target instanceof Element &&
+      Boolean(target.closest('[role="dialog"], textarea, input, select'));
+
+    const handleWheel = (event: WheelEvent) => {
+      if (
+        event.ctrlKey ||
+        event.shiftKey ||
+        Math.abs(event.deltaX) > Math.abs(event.deltaY) ||
+        shouldBypassHeaderStage(event.target)
+      ) {
+        return;
+      }
+
+      const isAtPageTop = window.scrollY <= 0;
+      const isCollapsing = event.deltaY > 0 && collapseProgress < 1 && isAtPageTop;
+      const isExpanding = event.deltaY < 0 && collapseProgress > 0 && isAtPageTop;
+
+      if (!isCollapsing && !isExpanding) return;
+
+      event.preventDefault();
+      const deltaScale =
+        event.deltaMode === WheelEvent.DOM_DELTA_LINE
+          ? 16
+          : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+            ? window.innerHeight
+            : 1;
+      setCollapseProgress(
+        collapseProgress + (event.deltaY * deltaScale) / HEADER_COLLAPSE_DISTANCE
+      );
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      lastTouchY = event.touches[0]?.clientY ?? null;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const currentTouchY = event.touches[0]?.clientY;
+      if (
+        currentTouchY === undefined ||
+        lastTouchY === null ||
+        shouldBypassHeaderStage(event.target)
+      ) {
+        return;
+      }
+
+      const deltaY = lastTouchY - currentTouchY;
+      lastTouchY = currentTouchY;
+      const isAtPageTop = window.scrollY <= 0;
+      const isCollapsing = deltaY > 0 && collapseProgress < 1 && isAtPageTop;
+      const isExpanding = deltaY < 0 && collapseProgress > 0 && isAtPageTop;
+
+      if (!isCollapsing && !isExpanding) return;
+
+      event.preventDefault();
+      setCollapseProgress(collapseProgress + deltaY / HEADER_COLLAPSE_DISTANCE);
+    };
+
+    const handleTouchEnd = () => {
+      lastTouchY = null;
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        shouldBypassHeaderStage(event.target) ||
+        window.scrollY > 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      const downStep =
+        event.key === 'ArrowDown'
+          ? 24
+          : event.key === 'PageDown' || event.key === ' ' || event.key === 'End'
+            ? HEADER_COLLAPSE_DISTANCE
+            : 0;
+      const upStep =
+        event.key === 'ArrowUp'
+          ? -24
+          : event.key === 'PageUp' || event.key === 'Home'
+            ? -HEADER_COLLAPSE_DISTANCE
+            : 0;
+      const step = downStep || upStep;
+
+      if (
+        step === 0 ||
+        (step > 0 && collapseProgress >= 1) ||
+        (step < 0 && collapseProgress <= 0)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      setCollapseProgress(collapseProgress + step / HEADER_COLLAPSE_DISTANCE);
+    };
+
+    const handleScroll = () => {
+      if (window.scrollY > 0 && collapseProgress < 1) {
+        setCollapseProgress(1);
+      }
+    };
+
+    window.history.scrollRestoration = 'manual';
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    syncPageScrollLock();
+    renderHeader();
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', scheduleHeaderRender);
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', scheduleHeaderRender);
+      if (animationFrame !== 0) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+      document.body.style.overflow = previousBodyOverflow;
+      window.history.scrollRestoration = previousScrollRestoration;
+    };
+  }, []);
+
+  return (
+    <header ref={headerRef} className="adaptive-header bg-[#8B0029] text-white shadow-md">
+      <div className="adaptive-header-inner container mx-auto h-full max-w-7xl">
+        <img src={tigerLogo} alt="" className="adaptive-header-logo" />
+        <h1 className="adaptive-header-title gugi-regular text-[#E5D0AC]">
+          졸업하고싶은 호랭이
+        </h1>
+      </div>
+    </header>
+  );
+};
 
 const App: React.FC = () => {
   // Get data for summary display in header
@@ -108,39 +339,36 @@ const App: React.FC = () => {
         <Route path="/about" element={<About />} />
         <Route path="/" element={
           <div className="app min-h-screen bg-[#FEF9E1] dark:bg-gray-900 text-[#333333] dark:text-[#F8F2DE]">
-            <header className="bg-[#8B0029] text-white p-4 shadow-md">
-              <div className="container mx-auto max-w-3xl px-4">
-                <div className="flex flex-col items-center text-center">
-                  <img src={tigerLogo} alt="Tiger Logo" className="tiger-logo mb-2" />
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold gugi-regular text-[#FEF9E1]">졸업하고싶은 호랭이</h1>
-                  </div>
-                  <div className="mt-4">
-                    <GradeScaleToggle />
-                  </div>
-                </div>
-              </div>
-            </header>
+            <AdaptiveHeader />
 
-            <main className="container mx-auto py-6 px-4 max-w-7xl overflow-x-auto">
-              <div className="flex flex-col items-center mb-4">
-                <CourseImporter />
-                <div className="mt-2">
-                  <Instructions />
+            <main className="container mx-auto max-w-7xl px-4 py-5">
+              <section
+                className="planner-toolbar relative z-40 mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#8B0029]/15 bg-[#E5D0AC] p-3 shadow-sm dark:border-white/10 dark:bg-gray-800"
+                aria-label="플래너 도구"
+              >
+                <div className="shrink-0">
+                  <GradeScaleToggle />
                 </div>
-              </div>
-              <div className="min-w-[800px] bg-transparent mb-8"> {/* Add min-width wrapper */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <CourseImporter />
+                  <PlanBackup />
+                  <Instructions />
+                  <ThemeToggle />
+                </div>
+              </section>
+
+              <div className="mb-8 w-full bg-transparent">
                 <CourseGrid />
               </div>
 
               {/* Progress tracking section */}
-              <div className="min-w-[800px] max-w-2xl mx-auto bg-[#8B0029] text-white p-6 rounded-lg shadow-lg"> {/* Add min-width */}
+              <div className="mx-auto w-full max-w-4xl rounded-xl bg-[#8B0029] p-4 text-white shadow-lg sm:p-6">
                 {/* Graph and credit summary side by side */}
-                <div className="flex gap-4">
-                  <div className="w-3/5">
+                <div className="flex flex-col gap-4 lg:flex-row">
+                  <div className="w-full lg:w-3/5">
                     <GPAGraph />
                   </div>
-                  <div className="w-2/5">
+                  <div className="w-full lg:w-2/5">
                     <div className="mb-4">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-lg font-semibold">취득 학점:</span>
@@ -150,6 +378,11 @@ const App: React.FC = () => {
                         <div 
                           className={`bg-green-500 h-2 rounded-full transition-all duration-500`} 
                           style={{ width: `${Math.min(100, overallCompletion)}%` }}
+                          role="progressbar"
+                          aria-label="전체 학점 이수율"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={Math.round(Math.min(100, overallCompletion))}
                         ></div>
                       </div>
                     </div>
@@ -227,6 +460,11 @@ const App: React.FC = () => {
                               <div 
                                 className={`h-1.5 rounded-full bg-green-500 transition-all duration-500`}
                                 style={{ width: `${Math.min(100, completion)}%` }}
+                                role="progressbar"
+                                aria-label={`${category.name} 학점 이수율`}
+                                aria-valuemin={0}
+                                aria-valuemax={100}
+                                aria-valuenow={Math.round(Math.min(100, completion))}
                               ></div>
                             </div>
                           </div>

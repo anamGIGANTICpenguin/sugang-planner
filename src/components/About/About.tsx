@@ -25,7 +25,7 @@ const About: React.FC = () => {
               졸업하고싶은 호랭이
             </h2>
             <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-              version 2.0.0
+              version 3.0.0
             </p>
           </div>
 
@@ -47,7 +47,7 @@ const About: React.FC = () => {
                     rel="noopener noreferrer" 
                     className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                   >
-                    카카오톡 채널
+                    에타 쪽지
                   </a>
                 </p>
               </div>

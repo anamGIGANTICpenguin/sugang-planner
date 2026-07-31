@@ -71,7 +71,8 @@ export const useCourseStore = create<CourseGridState>()(
         set((state) => ({
           semesters: state.semesters.filter((semester) => semester.id !== id),
           categories: state.categories.map((category) => {
-            const { [id]: _, ...restCourses } = category.courses;
+            const restCourses = { ...category.courses };
+            delete restCourses[id];
             return {
               ...category,
               courses: restCourses,
@@ -149,6 +150,10 @@ export const useCourseStore = create<CourseGridState>()(
           courses: {}
         }))
       })),
+      replacePlannerData: (categories, semesters) => set({
+        categories,
+        semesters,
+      }),
     }),
     {
       name: 'course-planner-storage',

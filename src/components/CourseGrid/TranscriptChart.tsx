@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
 import { useCourseStore } from '../../store/courseStore';
+import kupidCourseCopyGuide from '../../assets/kupid-course-copy-guide.png';
+import kupidSemesterCopyGuide from '../../assets/kupid-semester-copy-guide.png';
 import { addCoursesSequentially } from './courseUtils';
 import { 
   updateCategoriesBasedOnMajorSelection, 
   extractCodePrefix 
 } from './transcriptUtils';
 import MajorSelectionModal from './MajorSelectionModal';
+import {
+  tryParseCourseOnlyTabularTranscript,
+  tryParseVerticalTranscript,
+  VerticalTranscriptCourse,
+  VerticalSemesterGroup,
+} from './verticalTranscriptParser';
+import {
+  assignCoursesToSemesterSummaries,
+  parseSemesterCreditSummaries,
+} from './semesterSummaryParser';
 
 interface TranscriptChartProps {
   onSuccess?: () => void; // Callback function to be called after successful import
@@ -14,7 +26,11 @@ interface TranscriptChartProps {
 interface CourseData {
   year: string;
   semester: string;
+  semesterGroupId?: string;
+  semesterOrder?: number;
+  semesterLabel?: string;
   courseCode: string;
+  section?: string;
   courseName: string;
   category: string;
   subcategory: string;
@@ -28,10 +44,15 @@ interface CourseData {
 
 const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
   const [transcriptText, setTranscriptText] = useState<string>('');
+  const [semesterTranscriptText, setSemesterTranscriptText] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [showMajorModal, setShowMajorModal] = useState(false);
   const [majorPrefixOptions, setMajorPrefixOptions] = useState<Array<{ prefix: string; count: number }>>([]);
   const [parsedCourseData, setParsedCourseData] = useState<CourseData[]>([]);
+  const [pendingCourseData, setPendingCourseData] = useState<CourseData[]>([]);
+  const [verticalSemesterGroups, setVerticalSemesterGroups] = useState<VerticalSemesterGroup[]>([]);
+  const [semesterLabels, setSemesterLabels] = useState<Record<string, string>>({});
+  const [showImportPreview, setShowImportPreview] = useState(false);
   const {
     categories,
     semesters,
@@ -408,7 +429,7 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
     });
 
     // Extract unique year-semester combinations
-    const regularSemesters = new Map<string, string>();
+    const regularSemesters = new Map<string, { label: string; order: number }>();
     let hasSeasonalSemester = false;
     let hasMilitarySemester = false;
     
@@ -418,28 +439,25 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
         hasSeasonalSemester = true; // We'll merge military with seasonal
       } else if (course.semester.includes('계절')) {
         hasSeasonalSemester = true;
+      } else if (course.semesterGroupId && course.semesterLabel) {
+        regularSemesters.set(course.semesterGroupId, {
+          label: course.semesterLabel,
+          order: course.semesterOrder ?? regularSemesters.size,
+        });
       } else {
         const key = `${course.year}-${course.semester}`;
-        regularSemesters.set(key, `${course.year}년 ${course.semester}학기`);
+        regularSemesters.set(key, {
+          label: `${course.year}년 ${course.semester}학기`,
+          order: Number.parseInt(course.year) * 10 + Number.parseInt(course.semester),
+        });
       }
     });
 
     // Create regular semesters in chronological order
     Array.from(regularSemesters.entries())
-      .sort((a, b) => {
-        // Extract year and semester for comparison
-        const [yearA, semA] = a[0].split('-');
-        const [yearB, semB] = b[0].split('-');
-        
-        // First compare years
-        const yearComparison = parseInt(yearA) - parseInt(yearB);
-        if (yearComparison !== 0) return yearComparison;
-        
-        // If years are equal, compare semesters
-        return parseInt(semA) - parseInt(semB);
-      })
-      .forEach(([_, semesterName]) => {
-        addSemester(semesterName);
+      .sort((a, b) => a[1].order - b[1].order)
+      .forEach(([_, semesterConfig]) => {
+        addSemester(semesterConfig.label);
       });
 
     // Add seasonal semester as the rightmost column if needed
@@ -641,6 +659,16 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
         }
         return acc;
       }, {} as Record<string, string>);
+
+      dataToProcess.forEach(course => {
+        if (!course.semesterGroupId || !course.semesterLabel) return;
+        const matchingSemester = latestSemesters.find(
+          semester => semester.name === course.semesterLabel
+        );
+        if (matchingSemester) {
+          semesterMap[course.semesterGroupId] = matchingSemester.id;
+        }
+      });
       
       // Standard category map for non-major courses
       const categoryMap = latestCategories.reduce((acc, category) => {
@@ -791,7 +819,10 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
     
     // Check for essential fields in each course
     courseData.forEach((course, index) => {
-      if (!course.year || !course.semester) {
+      if (
+        (!course.year || !course.semester) &&
+        (!course.semesterGroupId || !course.semesterLabel)
+      ) {
         errors.push(`라인 ${index + 1}: 년도 또는 학기 정보가 누락되었습니다.`);
       }
       if (!course.courseCode || !course.courseName) {
@@ -850,154 +881,363 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
     };
   };
 
-  // Handle import button click
-  const handleImport = async () => {
-    if (!transcriptText.trim()) {
-      alert('성적표 데이터를 입력해주세요.');
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      // Step 1: Parse and validate data integrity
-      console.log('Step 1: Parsing and validating data...');
-      const courseData = parseTranscriptData(transcriptText);
-      setParsedCourseData(courseData);
-      
-      const { isValid, errors } = validateDataIntegrity(courseData);
-      if (!isValid) {
-        const errorMessage = `데이터 검증 실패:\n\n${errors.join('\n')}\n\n데이터를 수정하고 다시 시도해주세요.`;
-        alert(errorMessage);
-        setIsLoading(false);
-        return;
+  const showImportError = (error: unknown) => {
+    console.error('Error importing transcript data:', error);
+    setIsLoading(false);
+
+    if (error instanceof Error) {
+      if (error.message.includes('데이터 파싱')) {
+        alert(`데이터 업로드 실패:\n\n${error.message}\n\n해결 방법:\n1. KUPID에서 성적표를 다시 복사해주세요\n2. 누락된 데이터가 있는지 확인해주세요\n3. 세로형 데이터라면 과목 사이의 빈 줄을 유지해주세요`);
+      } else {
+        alert(`데이터 처리 중 오류가 발생했습니다:\n\n${error.message}\n\n데이터 형식을 확인하고 다시 시도해주세요.`);
       }
-      
-      console.log(`Step 1 완료: ${courseData.length}개의 유효한 과목 데이터 발견`);
-      
-      // Step 2: Analyze major categories and prefixes
-      console.log('Step 2: Analyzing major data...');
-      const { majorCategories, majorPrefixes, hasMajorCourses } = analyzeMajorData(courseData);
-      
-      console.log('Major categories found:', majorCategories);
-      console.log('Major prefixes found:', majorPrefixes);
-      console.log('Has major courses:', hasMajorCourses);
-      
-      // Step 3: Handle major selection if needed
-      console.log('Step 3: Processing major selection...');
-      
-      // Clear everything before starting
-      console.log('Resetting all courses...');
-      resetAllCourses();
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Configure semesters and categories
-      console.log('Configuring semesters...');
-      configureSemesters(courseData);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      console.log('Configuring categories...');
-      configureCategories(courseData);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Handle major analysis and selection based on whether we have major courses
-      if (!hasMajorCourses) {
-        // No major courses found, proceed with normal import
-        console.log('No major courses found, proceeding with normal import');
-        continueWithCourseImport(courseData);
-      } else if (majorPrefixes.length >= 2) {
-        // Multiple major prefixes found
-        console.log(`Multiple major prefixes found: ${majorPrefixes.map(p => p.prefix).join(', ')}`);
+    } else {
+      alert('데이터 형식에 문제가 있습니다. KUPID 성적표의 표 전체를 다시 복사해주세요.');
+    }
+  };
+
+  const prepareCourseImport = async (courseData: CourseData[]) => {
+    const { isValid, errors } = validateDataIntegrity(courseData);
+    if (!isValid) {
+      throw new Error(`데이터 검증 실패:\n\n${errors.join('\n')}`);
+    }
+
+    setParsedCourseData(courseData);
+
+    const { majorCategories, majorPrefixes, hasMajorCourses } = analyzeMajorData(courseData);
+    console.log('Major categories found:', majorCategories);
+    console.log('Major prefixes found:', majorPrefixes);
+
+    // Nothing is replaced until the user has reviewed and confirmed the preview.
+    resetAllCourses();
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    configureSemesters(courseData);
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    configureCategories(courseData);
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    if (!hasMajorCourses) {
+      await continueWithCourseImport(courseData);
+    } else if (majorPrefixes.length >= 2) {
+      setMajorPrefixOptions(majorPrefixes);
+      setShowMajorModal(true);
+    } else if (majorPrefixes.length === 1) {
+      const prefix = majorPrefixes[0].prefix;
+      const confirmed = confirm(
+        `전공 학수번호 접두사 "${prefix}"를 발견했습니다 (${majorPrefixes[0].count}개 과목).\n이것이 귀하의 본전공이 맞습니까?\n\n확인: 본전공으로 설정\n취소: 일반선택으로 분류`
+      );
+
+      if (confirmed) {
         setMajorPrefixOptions(majorPrefixes);
         setShowMajorModal(true);
-      } else if (majorPrefixes.length === 1) {
-        // Single major prefix found, ask user for confirmation
-        const prefix = majorPrefixes[0].prefix;
-        console.log(`Single major prefix found: ${prefix} (${majorPrefixes[0].count} courses)`);
-        const confirmed = confirm(
-          `전공 학수번호 접두사 "${prefix}"를 발견했습니다 (${majorPrefixes[0].count}개 과목).\n이것이 귀하의 본전공이 맞습니까?\n\n확인: 본전공으로 설정\n취소: 일반선택으로 분류`
-        );
-        
-        if (confirmed) {
-          setMajorPrefixOptions(majorPrefixes);
-          setShowMajorModal(true);
-        } else {
-          // User declined, continue with normal import
-          console.log('User declined single major prefix, treating as general elective');
-          continueWithCourseImport(courseData);
-        }
       } else {
-        // Has major courses but no prefixes (courses without clear prefixes)
-        console.log('Has major courses but no clear prefixes, proceeding with normal import');
-        continueWithCourseImport(courseData);
+        await continueWithCourseImport(courseData);
       }
-      
-    } catch (error) {
-      console.error('Error importing transcript data:', error);
+    } else {
+      await continueWithCourseImport(courseData);
+    }
+  };
+
+  // Parse first and present a preview. The planner is not changed at this stage.
+  const handleImport = () => {
+    if (!semesterTranscriptText.trim() || !transcriptText.trim()) {
+      alert('학기별 성적과 과목별 성적을 모두 입력해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const semesterSummaries = parseSemesterCreditSummaries(semesterTranscriptText);
+      const courseOnlyTabularResult = tryParseCourseOnlyTabularTranscript(transcriptText);
+      const verticalResult = tryParseVerticalTranscript(transcriptText);
+      const unassignedCourseData = courseOnlyTabularResult
+        ? courseOnlyTabularResult.courses
+        : verticalResult
+          ? verticalResult.courses
+          : (parseTranscriptData(transcriptText) as VerticalTranscriptCourse[]);
+      const assignment = assignCoursesToSemesterSummaries(
+        unassignedCourseData,
+        semesterSummaries
+      );
+      const courseData = assignment.courses as CourseData[];
+      const { isValid, errors } = validateDataIntegrity(courseData);
+
+      if (!isValid) {
+        throw new Error(`데이터 검증 실패:\n\n${errors.join('\n')}`);
+      }
+
+      const groups = assignment.groups;
+      const initialLabels = groups.reduce<Record<string, string>>((labels, group) => {
+        labels[group.id] = group.label;
+        return labels;
+      }, {});
+
+      setPendingCourseData(courseData);
+      setVerticalSemesterGroups(groups);
+      setSemesterLabels(initialLabels);
+      setShowImportPreview(true);
       setIsLoading(false);
-      
-      // Provide specific error message based on the error type
-      if (error instanceof Error) {
-        if (error.message.includes('데이터 파싱')) {
-          // This is a parsing error with detailed information
-          alert(`데이터 업로드 실패:\n\n${error.message}\n\n해결 방법:\n1. KUPID에서 성적표를 다시 복사해주세요\n2. 각 줄이 탭으로 구분되어 있는지 확인해주세요\n3. 누락된 데이터가 있는지 확인해주세요`);
-        } else {
-          alert(`데이터 처리 중 오류가 발생했습니다:\n\n${error.message}\n\n데이터 형식을 확인하고 다시 시도해주세요.`);
-        }
-      } else {
-        alert('데이터 형식에 문제가 있습니다. 다음을 확인해주세요:\n\n1. KUPID 성적표에서 표 전체를 올바르게 복사했는지\n2. 각 줄에 년도, 학기, 학수번호, 과목명, 이수구분, 학점, 점수, 등급, 평점이 포함되어 있는지\n3. 데이터가 탭으로 구분되어 있는지');
-      }
+    } catch (error) {
+      showImportError(error);
+    }
+  };
+
+  const confirmImportPreview = async () => {
+    const missingSemesterLabel = verticalSemesterGroups.some(
+      group => !semesterLabels[group.id]?.trim()
+    );
+    if (missingSemesterLabel) {
+      alert('모든 학기 이름을 입력해주세요.');
+      return;
+    }
+
+    const normalizedLabels = verticalSemesterGroups.map(group =>
+      semesterLabels[group.id].trim()
+    );
+    if (new Set(normalizedLabels).size !== normalizedLabels.length) {
+      alert('각 학기 그룹에 서로 다른 학기 이름을 입력해주세요.');
+      return;
+    }
+
+    const courseData = pendingCourseData.map(course =>
+      course.semesterGroupId
+        ? {
+            ...course,
+            semesterLabel: semesterLabels[course.semesterGroupId].trim(),
+          }
+        : course
+    );
+
+    setShowImportPreview(false);
+    setIsLoading(true);
+    try {
+      await prepareCourseImport(courseData);
+    } catch (error) {
+      showImportError(error);
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-3xl p-6 relative max-h-[80vh] overflow-y-auto">
-      <h2 className="text-xl font-bold mb-4">수강 과목 업로드</h2>
-      <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
-        아래 텍스트박스에 KUPID - 전체성적조회 - 성적확정자료 하단의 표를 복사하여 붙여넣으세요. 
-      </p>
-      
-      <div className="mb-4 text-xs text-gray-500 dark:text-gray-400 pl-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-        <p className="mb-2">각 줄마다 하나의 과목 정보가 다음 순서로 포함되어야 합니다:</p>
-        <div className="font-mono bg-gray-100 dark:bg-gray-700 p-2 mb-2 rounded text-2xs overflow-x-auto">
-          년도 학기 학수번호 과목명 이수구분 [교양영역] [과목유형] 학점 점수 등급 평점 [재수강년도] [재수강학기] [재수강과목] [삭제구분]
-        </div>
-        <div className="font-mono bg-gray-100 dark:bg-gray-700 p-2 mb-2 rounded text-2xs overflow-x-auto">
-          예시: 2020	1	CHEM15107	일반화학및연습Ⅰ(영강)	교양	전공관련교양		3	100	A+	4.5
-        </div>
-        <ul className="list-disc pl-5 mt-2 text-xs space-y-1">
-          <li>KUPID에서 표를 복사할 때 탭으로 구분된 데이터가 자동으로 복사됩니다.</li>
-          <li>계절학기 및 군복무 학점은 자동으로 별도 처리됩니다.</li>
-          <li>전공 접두사가 여러 개 발견되면 본전공/제2전공 선택 창이 나타납니다.</li>
-          <li>선택되지 않은 전공 접두사는 '일반선택' 카테고리로 자동 분류됩니다.</li>
-        </ul>
-      </div>
-      
-      <textarea
-        className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded mb-4 dark:bg-gray-700 dark:text-white font-mono text-sm bg-gray-50 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        placeholder="KUPID>전체성적조회 하단의 표를 복사하여 붙여넣으세요"
-        value={transcriptText}
-        onChange={(e) => setTranscriptText(e.target.value)}
-        disabled={isLoading}
-      />
-      
-      <button
-        className={`px-6 py-3 ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded-lg w-full relative transition-colors duration-200 font-medium`}
-        onClick={handleImport}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <div className="flex items-center justify-center">
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            성적표 처리 중...
+    <div className="relative max-h-[80vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-[#8B0029]/15 bg-[#FEF9E1] p-6 text-[#333333] shadow-xl dark:border-white/10 dark:bg-gray-800 dark:text-[#F8F2DE]">
+      <h2 id="transcript-import-title" className="text-xl font-bold mb-4">수강 과목 업로드</h2>
+
+      {showImportPreview ? (
+        <div>
+          <div className="mb-4 rounded-lg border border-[#8B0029]/15 bg-[#FEF9E1] p-4 dark:border-white/10 dark:bg-gray-900">
+            <h3 className="mb-2 font-semibold text-[#8B0029] dark:text-[#F8F2DE]">
+              불러오기 전 확인
+            </h3>
+            <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
+              <div>
+                <span className="block text-xs text-gray-500 dark:text-gray-400">과목</span>
+                <strong>{pendingCourseData.length}개</strong>
+              </div>
+              <div>
+                <span className="block text-xs text-gray-500 dark:text-gray-400">학기</span>
+                <strong>
+                  {verticalSemesterGroups.length > 0
+                    ? verticalSemesterGroups.length
+                    : new Set(
+                        pendingCourseData
+                          .filter(course => course.year !== '군복무중이수')
+                          .map(course => `${course.year}-${course.semester}`)
+                      ).size}
+                  개
+                </strong>
+              </div>
+              <div>
+                <span className="block text-xs text-gray-500 dark:text-gray-400">군학점</span>
+                <strong>
+                  {pendingCourseData.filter(course => course.year === '군복무중이수').length}개
+                </strong>
+              </div>
+            </div>
           </div>
-        ) : (
-          '성적표 불러오기'
-        )}
-      </button>
+
+          {verticalSemesterGroups.length > 0 ? (
+            <div className="mb-4">
+              <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
+                학기별 신청학점·취득학점과 과목 순서를 비교해 학기를 배정했습니다. 각
+                그룹을 확인해주세요.
+              </p>
+              <div className="space-y-2">
+                {verticalSemesterGroups.map(group => {
+                  const groupCourses = pendingCourseData.filter(
+                    course => course.semesterGroupId === group.id
+                  );
+                  return (
+                    <label
+                      key={group.id}
+                      className="block rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+                    >
+                      <span className="mb-1 flex items-center justify-between gap-3 text-xs font-medium">
+                        <span>학기 그룹 {group.order + 1}</span>
+                        <span className="text-gray-500 dark:text-gray-400">
+                          {group.courseCount}개 과목
+                        </span>
+                      </span>
+                      <input
+                        type="text"
+                        value={semesterLabels[group.id] ?? ''}
+                        onChange={event =>
+                          setSemesterLabels(labels => ({
+                            ...labels,
+                            [group.id]: event.target.value,
+                          }))
+                        }
+                        placeholder="예: 2022년 1학기"
+                        className="mb-1.5 w-full rounded-md border border-gray-300 bg-[#FFFDF5] px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                      />
+                      <span className="block truncate text-xs text-gray-500 dark:text-gray-400">
+                        {groupCourses
+                          .slice(0, 4)
+                          .map(course => course.courseName)
+                          .join(', ')}
+                        {groupCourses.length > 4 ? ` 외 ${groupCourses.length - 4}개` : ''}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="mb-4 rounded-lg bg-[#F4E6C8] p-3 text-sm dark:bg-gray-900">
+              <p className="mb-1 font-medium">감지된 학기</p>
+              <p className="text-gray-600 dark:text-gray-300">
+                {Array.from(
+                  new Set(
+                    pendingCourseData
+                      .filter(course => course.year !== '군복무중이수')
+                      .map(course => `${course.year}년 ${course.semester}학기`)
+                  )
+                ).join(', ')}
+              </p>
+            </div>
+          )}
+
+          <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
+            현재 수강 계획은 아래 확인 버튼을 누르기 전까지 변경되지 않습니다.
+          </p>
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setShowImportPreview(false)}
+              className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-black/5 dark:border-gray-600 dark:hover:bg-white/10"
+            >
+              다시 붙여넣기
+            </button>
+            <button
+              type="button"
+              onClick={confirmImportPreview}
+              className="rounded-md bg-[#8B0029] px-4 py-2 text-sm font-semibold text-white hover:bg-[#6d0020]"
+            >
+              확인하고 불러오기
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
+            KUPID 전체성적조회에서 학기별 성적과 과목별 성적을 각각 복사해 아래 칸에
+            붙여넣으세요.
+          </p>
+
+          <div className="mb-4 rounded-lg border border-[#8B0029]/10 bg-[#F4E6C8] p-3 text-xs text-gray-600 dark:border-white/10 dark:bg-gray-900/60 dark:text-gray-300">
+            <p className="mb-3">
+              학기별 신청학점·취득학점과 과목 순서를 함께 비교해 각 과목의 학기를
+              자동으로 찾습니다.
+            </p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <section className="rounded-md border border-[#8B0029]/10 bg-[#FEF9E1]/85 p-2.5 dark:border-white/10 dark:bg-gray-800/70">
+                <h3 className="mb-1 font-semibold text-[#8B0029] dark:text-[#F8F2DE]">
+                  학기별 성적
+                </h3>
+                <p className="mb-2 leading-relaxed">
+                  학기별 성적 탭에서는 <strong>“20**학년도 1학기”</strong>를 포함해서
+                  마지막 학기 <strong>환산점수</strong>까지 복사해주세요.{' '}
+                  <strong className="rounded bg-amber-100 px-1 text-amber-900 dark:bg-amber-400/20 dark:text-amber-200">
+                    마지막 학기 환산점수가 빠지지 않도록 주의해주세요.
+                  </strong>
+                </p>
+                <img
+                  src={kupidSemesterCopyGuide}
+                  alt="학기별 성적에서 학기 이름부터 복사하는 예시"
+                  className="w-full rounded border border-gray-200 bg-white dark:border-gray-600"
+                />
+              </section>
+
+              <section className="rounded-md border border-[#8B0029]/10 bg-[#FEF9E1]/85 p-2.5 dark:border-white/10 dark:bg-gray-800/70">
+                <h3 className="mb-1 font-semibold text-[#8B0029] dark:text-[#F8F2DE]">
+                  과목별 성적
+                </h3>
+                <p className="mb-2 leading-relaxed">
+                  과목별 성적 탭에서는 <strong>“20**학년도 1학기”</strong>가 복사되지
+                  않습니다. 제일 상단의 수업 <strong>학수번호</strong>부터 복사해주세요.
+                </p>
+                <img
+                  src={kupidCourseCopyGuide}
+                  alt="과목별 성적에서 첫 수업의 학수번호부터 복사하는 예시"
+                  className="w-full rounded border border-gray-200 bg-white dark:border-gray-600"
+                />
+              </section>
+            </div>
+            <p className="mt-3">
+              두 탭 모두 위에서 아래까지 전체 내용을 복사한 뒤, 불러오기 전 확인
+              화면에서 감지된 학기와 과목 수를 확인해주세요.
+            </p>
+          </div>
+
+          <div className="mb-4 grid gap-3 md:grid-cols-2">
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-semibold text-[#8B0029] dark:text-[#F8F2DE]">
+                학기별 성적
+              </span>
+              <span className="mb-2 block text-xs text-gray-500 dark:text-gray-400">
+                학기별 성적 탭의 전체 내용을 붙여넣으세요.
+              </span>
+              <textarea
+                className="h-44 w-full resize-none rounded-md border border-gray-300 bg-gray-50 p-3 font-mono text-xs focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#8B0029]/40 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                placeholder={'예: 2022학년도 1학기\n신청학점 18\n취득학점 18'}
+                value={semesterTranscriptText}
+                onChange={event => setSemesterTranscriptText(event.target.value)}
+                disabled={isLoading}
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-semibold text-[#8B0029] dark:text-[#F8F2DE]">
+                과목별 성적
+              </span>
+              <span className="mb-2 block text-xs text-gray-500 dark:text-gray-400">
+                과목별 성적 탭의 전체 내용을 붙여넣으세요.
+              </span>
+              <textarea
+                className="h-44 w-full resize-none rounded-md border border-gray-300 bg-gray-50 p-3 font-mono text-xs focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#8B0029]/40 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                placeholder={'예: CHEM151\n14\n일반화학및연습Ⅰ(영강)\n교양'}
+                value={transcriptText}
+                onChange={event => setTranscriptText(event.target.value)}
+                disabled={isLoading}
+              />
+            </label>
+          </div>
+
+          <button
+            className={`relative w-full rounded-lg px-6 py-3 font-medium text-white transition-colors duration-200 ${
+              isLoading
+                ? 'cursor-not-allowed bg-gray-400'
+                : 'bg-[#8B0029] hover:bg-[#6d0020]'
+            }`}
+            onClick={handleImport}
+            disabled={isLoading}
+          >
+            {isLoading ? '성적표 처리 중...' : '업로드'}
+          </button>
+        </>
+      )}
 
       {/* Major Selection Modal */}
       {showMajorModal && (

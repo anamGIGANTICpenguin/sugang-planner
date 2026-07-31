@@ -1,5 +1,7 @@
-@tailwind utilities;
 @import "tailwindcss";
 
-@import "tailwindcss/preflight";
-@import "tailwindcss/utilities";
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  scrollbar-gutter: stable;
+}

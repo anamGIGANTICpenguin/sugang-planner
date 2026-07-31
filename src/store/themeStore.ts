@@ -7,10 +7,14 @@ type ThemeState = {
   toggleDarkMode: () => void;
 };
 
+const prefersDarkMode =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(prefers-color-scheme: dark)').matches;
+
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      darkMode: false,
+      darkMode: prefersDarkMode,
       toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
     }),
     {

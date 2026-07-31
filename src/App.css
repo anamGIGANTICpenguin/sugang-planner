@@ -2,8 +2,6 @@
 /* Base styling for the app */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Gugi&display=swap');
-@import "tailwindcss";
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 /* Override the input focus styles in dark mode */
 body {
@@ -21,9 +19,35 @@ body {
   font-style: normal;
 }
 
+.toolbar-secondary-control {
+  border: 1px solid rgba(139, 0, 41, 0.2);
+  background-color: #f0dec0;
+  color: #8B0029;
+  box-shadow: 0 1px 2px rgba(51, 51, 51, 0.08);
+}
+
+.toolbar-secondary-control:hover {
+  border-color: rgba(139, 0, 41, 0.36);
+  background-color: #e8cea2;
+}
+
+.dark .toolbar-secondary-control {
+  border-color: rgba(255, 255, 255, 0.15);
+  background-color: #111827;
+  color: #F8F2DE;
+}
+
+.dark .toolbar-secondary-control:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+  background-color: #374151;
+}
+
 /* Course Grid styling */
 .course-grid {
   overflow-x: auto;
+  overflow-y: visible;
+  max-height: none;
+  overscroll-behavior-x: contain;
   background-color: transparent;
   /* Remove the grid lines that were disturbing */
   background-image: none;
@@ -66,38 +90,7 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Cell editing styles */
-.cell.editing {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease-in-out;
-  position: fixed;
-  max-width: 200px; /* Reduced from 250px */
-  min-height: 128px; /* Reduced from 160px */
-  border-radius: 4px;
-  z-index: 1000;
-  isolation: isolate;
-}
-
-/* Updated cell editing styles */
-.cell.editing {
-  transform-origin: top;
-  animation: cell-expand 200ms cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin: 0.25rem 0;
-}
-
-@keyframes cell-expand {
-  from {
-    transform: scaleY(0.8);
-    opacity: 0;
-  }
-  to {
-    transform: scaleY(1);
-    opacity: 1;
-  }
-}
-
-/* Ensure proper stacking context for expanded cells */
+/* Keep grid rows stable while an editor is open. */
 .semester-cell {
   position: relative;
   isolation: isolate;
@@ -108,19 +101,6 @@ body {
   transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Ensure expanded cells overlap properly */
-.cell.editing {
-  z-index: 10;
-}
-
-/* Fade out other cells when one is being edited */
-.semester-cell:has(.cell.editing) .cell:not(.editing) {
-  opacity: 0.5;
-  filter: grayscale(20%);
-  transition: all 300ms ease;
-}
-
-/* Position the editing forms properly */
 .cell {
   position: relative;
   border-radius: 5px;
@@ -131,43 +111,6 @@ body {
   position: relative;
 }
 
-.cell.editing input,
-.cell.editing select {
-  font-size: 0.6rem; /* Further reduced from 0.7rem */
-  line-height: 0.9rem; /* Adjusted from 1rem to match smaller font */
-  padding: 0.2rem 0.4rem;
-}
-
-.cell.editing input::placeholder,
-.cell.editing select::placeholder {
-  color: #9ca3af;
-  font-size: 0.5rem;
-}
-
-.cell.editing .flex.flex-col.gap-2 {
-  gap: 0.4rem; /* Reduced from 0.5rem */
-}
-
-.cell.editing button {
-  padding: 0.2rem 0.4rem; /* Reduced padding */
-  font-size: 0.6rem; /* Reduced font size */
-}
-
-/* Reduce close button size */
-.cell.editing button.absolute.-top-2.-right-2 {
-  width: 16px; /* Reduced from 20px */
-  height: 16px; /* Reduced from 20px */
-  font-size: 14px; /* Reduced from 16px */
-  top: -8px; /* Adjust position */
-  right: -8px;
-}
-
-/* Update checkbox label size */
-.cell.editing label {
-  font-size: 0.6rem; /* Reduced from text-xs */
-  line-height: 1;
-}
-
 /* Override input focus styles */
 input:focus, 
 button:focus,
@@ -176,6 +119,42 @@ select:focus {
   outline-offset: 0;
   box-shadow: none;
   border-color: rgba(159, 18, 57, 0.5);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #8B0029;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(139, 0, 41, 0.14);
+}
+
+.dark button:focus-visible,
+.dark a:focus-visible,
+.dark input:focus-visible,
+.dark textarea:focus-visible,
+.dark select:focus-visible,
+.dark [tabindex]:focus-visible {
+  outline-color: #f8f2de;
+  box-shadow: 0 0 0 4px rgba(248, 242, 222, 0.14);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 1px solid #8B0029;
+  outline-offset: 1px;
+  box-shadow: 0 0 0 1px rgba(139, 0, 41, 0.12);
+}
+
+.dark input:focus-visible,
+.dark textarea:focus-visible,
+.dark select:focus-visible {
+  outline-color: #9f1239;
+  box-shadow: 0 0 0 1px rgba(159, 18, 57, 0.14);
 }
 
 /* Responsive adjustments */
@@ -197,7 +176,7 @@ button,
 .category-row {
   margin-bottom: 5px;
   border-radius: 4px;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
   transition: all 0.2s ease;
   isolation: isolate;
@@ -267,21 +246,6 @@ button,
   background-color: rgba(159, 18, 57, 0.1);
 }
 
-/* Add a more visible horizontal separator */
-.category-row:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: linear-gradient(90deg, 
-    rgba(139, 0, 41, 0.1), 
-    rgba(139, 0, 41, 0.3) 50%, 
-    rgba(139, 0, 41, 0.1)
-  );
-}
-
 /* Remove light mode styles for progress bars */
 .bg-white\/30.rounded-full {
   background-color: rgba(20, 184, 166, 0.1) !important;
@@ -293,11 +257,77 @@ button,
   background-color: #15803d !important; /* dark green (green-700) */
 }
 
-.tiger-logo {
+.adaptive-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--adaptive-header-height, 206px);
+  overflow: hidden;
+  will-change: height;
+}
+
+.adaptive-header-inner {
+  position: relative;
+}
+
+.adaptive-header-logo,
+.adaptive-header-title {
+  position: absolute;
+  z-index: 1;
+  margin: 0;
+  will-change: top, left, height, transform, font-size;
+}
+
+.adaptive-header-logo {
   display: block;
-  height: 250px;
+  top: var(--adaptive-logo-top, 8px);
+  left: var(--adaptive-logo-left, 50%);
+  height: var(--adaptive-logo-height, 152px);
   width: auto;
-  margin: 0 auto 1rem;
+  padding: 4px;
+  box-sizing: border-box;
+  object-fit: contain;
+  object-position: center;
+  overflow: visible;
+  transform: translateX(var(--adaptive-brand-translate-x, -50%));
+}
+
+.adaptive-header-title {
+  top: var(--adaptive-title-top, 164px);
+  left: var(--adaptive-title-left, 50%);
+  max-width: calc(100% - 92px);
+  overflow: hidden;
+  font-size: var(--adaptive-title-font-size, 24px);
+  font-weight: 700;
+  line-height: var(--adaptive-title-line-height, 30px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform:
+    translateX(var(--adaptive-brand-translate-x, -50%))
+    translateY(var(--adaptive-title-translate-y, 0%));
+}
+
+@media (max-width: 639px) {
+  .adaptive-header {
+    height: var(--adaptive-header-height, 164px);
+  }
+
+  .adaptive-header-logo {
+    height: var(--adaptive-logo-height, 116px);
+  }
+
+  .adaptive-header-title {
+    top: var(--adaptive-title-top, 128px);
+    font-size: var(--adaptive-title-font-size, 20px);
+    line-height: var(--adaptive-title-line-height, 24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adaptive-header-logo,
+  .adaptive-header-title {
+    will-change: auto;
+  }
 }
 
 /* Retake course styling */
@@ -334,29 +364,20 @@ button,
     transparent calc(50% + 0.5px));
 }
 
-.dark .retake-course::before,
-.dark .retake-course::after {
-  background: linear-gradient(to right top, 
-    transparent calc(50% - 0.5px),
-    rgba(159, 18, 57, 0.7) calc(50% - 0.5px),
-    rgba(159, 18, 57, 0.7) calc(50% + 0.5px),
-    transparent calc(50% + 0.5px));
-}
-
 .dark .retake-course::before {
   background: linear-gradient(to right top, 
-    transparent calc(50% - 1.0px),
-    rgba(159, 18, 57, 0.7) calc(50% - 0.75px),
-    rgba(159, 18, 57, 0.7) calc(50% + 0.75px),
-    transparent calc(50% + 0.75px));
+    transparent calc(50% - 1px),
+    rgba(244, 63, 94, 0.9) calc(50% - 1px),
+    rgba(244, 63, 94, 0.9) calc(50% + 1px),
+    transparent calc(50% + 1px));
 }
 
 .dark .retake-course::after {
   background: linear-gradient(to left top, 
-    transparent calc(50% - 1.0px),
-    rgba(159, 18, 57, 0.7) calc(50% - 0.75px),
-    rgba(159, 18, 57, 0.7) calc(50% + 0.75px),
-    transparent calc(50% + 0.75px));
+    transparent calc(50% - 1px),
+    rgba(244, 63, 94, 0.9) calc(50% - 1px),
+    rgba(244, 63, 94, 0.9) calc(50% + 1px),
+    transparent calc(50% + 1px));
 }
 
 /* Portal and popup styles */
@@ -374,6 +395,72 @@ button,
   pointer-events: auto;
 }
 
+/* Course and category editors stay above the grid instead of resizing it. */
+.anchored-editor-popover {
+  position: fixed;
+  z-index: 10000;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  border-radius: 12px;
+  opacity: 0;
+  transform: translateY(-5px) scale(0.985);
+  transform-origin: top left;
+  transition:
+    opacity 140ms ease-out,
+    transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.anchored-editor-popover[data-placement='top'] {
+  transform: translateY(5px) scale(0.985);
+  transform-origin: bottom left;
+}
+
+.anchored-editor-popover.is-open,
+.anchored-editor-popover.is-open[data-placement='top'] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.cell-selected {
+  outline: none;
+  box-shadow: inset 0 0 0 9999px rgba(139, 0, 41, 0.09);
+}
+
+.dark .cell-selected {
+  box-shadow: inset 0 0 0 9999px rgba(159, 18, 57, 0.17);
+}
+
+.cell:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.dark .cell:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.semester-header-trigger:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 9999px rgba(139, 0, 41, 0.08);
+}
+
+.dark .semester-header-trigger:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 9999px rgba(159, 18, 57, 0.14);
+}
+
+.category-header-trigger:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 9999px rgba(139, 0, 41, 0.07);
+}
+
+.dark .category-header-trigger:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 9999px rgba(159, 18, 57, 0.13);
+}
+
 /* Condensed cell styles for 10+ semesters */
 .condensed-cells .cell.filled,
 .condensed-cells .cell.empty {
@@ -388,7 +475,7 @@ button,
   line-height: 1;
 }
 
-.condensed-cells .cell.filled .text-[10px] {
+.condensed-cells .cell.filled .text-\[10px\] {
   font-size: 0.6rem !important;
 }
 
@@ -459,35 +546,61 @@ button,
   background-color: rgba(159, 18, 57, 0.05);
 }
 
-/* Add smooth scrolling for overflow content */
-main.overflow-x-auto {
-  -webkit-overflow-scrolling: touch; /* For smooth scrolling on iOS */
-  scrollbar-width: thin; /* For Firefox */
-  scrollbar-color: rgba(139, 0, 41, 0.5) transparent; /* For Firefox */
+/* Keep horizontal panning available without creating a second vertical viewport. */
+.course-grid {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 0, 41, 0.5) transparent;
 }
 
 /* Customize scrollbar for Webkit browsers */
-main.overflow-x-auto::-webkit-scrollbar {
+.course-grid::-webkit-scrollbar {
+  width: 8px;
   height: 8px;
 }
 
-main.overflow-x-auto::-webkit-scrollbar-track {
+.course-grid::-webkit-scrollbar-track {
   background: transparent;
 }
 
-main.overflow-x-auto::-webkit-scrollbar-thumb {
+.course-grid::-webkit-scrollbar-thumb {
   background-color: rgba(139, 0, 41, 0.5);
   border-radius: 4px;
 }
 
-.dark main.overflow-x-auto::-webkit-scrollbar-thumb {
+.dark .course-grid::-webkit-scrollbar-thumb {
   background-color: rgba(159, 18, 57, 0.5);
 }
 
-/* Ensure minimum width for mobile */
-@media (max-width: 800px) {
-  main > div {
-    min-width: 800px; /* Minimum width before horizontal scrolling starts */
+@media (max-width: 640px) {
+  .tiger-logo {
+    height: 116px;
+    padding: 6px;
+  }
+
+  .anchored-editor-popover,
+  .anchored-editor-popover[data-placement='top'] {
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: 8px !important;
+    top: auto !important;
+    width: auto !important;
+    max-height: calc(100dvh - 16px - env(safe-area-inset-bottom));
+    transform: translateY(12px) scale(0.99);
+    transform-origin: bottom center;
+  }
+
+  .anchored-editor-popover.is-open,
+  .anchored-editor-popover.is-open[data-placement='top'] {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anchored-editor-popover,
+  .anchored-editor-popover[data-placement='top'] {
+    transition: none;
+    transform: none;
   }
 }
 

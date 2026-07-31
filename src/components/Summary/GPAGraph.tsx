@@ -73,6 +73,7 @@ const GPAGraph: React.FC = () => {
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
         tension: 0.4,
         borderWidth: 1.5,
+        spanGaps: true,
       },
       {
         label: '전공 평점',
@@ -81,6 +82,7 @@ const GPAGraph: React.FC = () => {
         backgroundColor: 'rgba(229, 208, 172, 0.1)',
         tension: 0.4,
         borderWidth: 2, // Made thicker than the total GPA line
+        spanGaps: true,
       }
     ]
   };

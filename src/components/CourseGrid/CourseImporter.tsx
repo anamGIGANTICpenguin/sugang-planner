@@ -22,8 +22,12 @@ const CourseImporter: React.FC = () => {
   return (
     <div className="relative">
       <button
-        className="flex items-center gap-2 mx-auto px-4 py-2 bg-[#8B0029] text-white rounded-lg hover:bg-[#6d0020] transition-colors duration-200 dark:bg-[#9f1239] dark:hover:bg-[#881337]"
+        type="button"
+        className="mx-auto flex min-h-10 items-center gap-2 rounded-lg bg-[#8B0029] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#6d0020] dark:bg-[#9f1239] dark:hover:bg-[#881337]"
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-controls="transcript-import-dialog"
+        aria-haspopup="dialog"
       >
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
@@ -31,6 +35,7 @@ const CourseImporter: React.FC = () => {
           fill="none" 
           viewBox="0 0 24 24" 
           stroke="currentColor"
+          aria-hidden="true"
         >
           <path 
             strokeLinecap="round" 
@@ -39,7 +44,7 @@ const CourseImporter: React.FC = () => {
             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" 
           />
         </svg>
-        <span>수강 과목 업로드</span>
+        <span>KUPID 업로드</span>
       </button>
 
       {isOpen && (
@@ -52,10 +57,19 @@ const CourseImporter: React.FC = () => {
             }
           }}
         >
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-3xl p-6 relative">
+          <div
+            id="transcript-import-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="transcript-import-title"
+            className="relative w-full max-w-3xl"
+          >
             <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+              type="button"
+              className="absolute right-3 top-3 z-10 rounded-md p-1 text-gray-500 hover:bg-[#E5D0AC]/60 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
               onClick={() => setIsOpen(false)}
+              aria-label="KUPID 업로드 창 닫기"
+              autoFocus
             >
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
@@ -63,6 +77,7 @@ const CourseImporter: React.FC = () => {
                 fill="none" 
                 viewBox="0 0 24 24" 
                 stroke="currentColor"
+                aria-hidden="true"
               >
                 <path 
                   strokeLinecap="round" 

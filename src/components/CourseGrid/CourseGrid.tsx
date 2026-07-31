@@ -113,20 +113,27 @@ const CourseGrid: React.FC = () => {
   return (
     <div 
       ref={gridRef}
-      className={`course-grid p-4 ${semesters.length >= 6 ? 'condensed-cells' : ''}`}
+      className={`course-grid rounded-xl border border-[#8B0029]/10 bg-white/30 shadow-sm dark:border-white/10 dark:bg-gray-900/40 ${
+        semesters.length >= 6 ? 'condensed-cells' : ''
+      }`}
       onDragOver={handleDragOver}
+      role="region"
+      aria-label="학기별 수강 계획표"
+      tabIndex={0}
     >
-      <div className="grid grid-cols-[120px_1fr] gap-1 mb-4 relative">
+      <div className="course-grid-content min-w-[800px] p-3">
+      <div className="semester-header-row sticky top-0 z-30 mb-3 grid grid-cols-[120px_1fr] gap-1 bg-[#FEF9E1] py-1 dark:bg-gray-900">
         {/* Empty top-left cell with semester add button (invisible cell, visible button) */}
-        <div className="p-2 relative bg-transparent border-0">
-          <div 
-            className="text-center bg-[#E5D0AC] border border-[#8B0029] cursor-pointer text-[#333333] flex items-center justify-center rounded absolute top-1/2 right-2 transform -translate-y-1/2 dark:bg-[#202838] dark:border-[#9f1239] dark:text-[#F8F2DE] dark:hover:bg-[#2d3748]"
+        <div className="sticky left-0 z-40 border-0 bg-[#FEF9E1] p-2 dark:bg-gray-900">
+          <button
+            type="button"
+            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-[#E5D0AC] text-center text-[#333333] shadow-sm transition hover:bg-[#dbc096] dark:bg-[#202838] dark:text-[#F8F2DE] dark:hover:bg-[#2d3748]"
             onClick={handleAddSemester}
-            style={{ width: '25px', height: '25px' }}
-            title="Add new semester"
+            title="학기 추가"
+            aria-label="학기 추가"
           >
             <span className="text-sm font-bold">+</span>
-          </div>
+          </button>
         </div>
         
         {/* Semester headers - using auto-fit to ensure equal width columns */}
@@ -138,10 +145,12 @@ const CourseGrid: React.FC = () => {
             borderRight: '1px dashed rgba(139, 0, 41, 0.15)'
           }}
         >
-          {semesters.map((semester) => (
+          {semesters.map((semester, index) => (
             <SemesterHeader
               key={semester.id}
               name={semester.name}
+              isFirst={index === 0}
+              isLast={index === semesters.length - 1}
               onUpdate={(newName) => handleUpdateSemester(semester.id, newName)}
               onDelete={() => removeSemester(semester.id)}
             />
@@ -167,6 +176,8 @@ const CourseGrid: React.FC = () => {
           <CategoryRow
             category={category}
             semesters={semesters}
+            isFirst={index === 0}
+            isLast={index === categories.length - 1}
             updateCategory={updateCategory}
             removeCategory={removeCategory}
             addCourse={addCourse}
@@ -198,7 +209,7 @@ const CourseGrid: React.FC = () => {
 
       {/* Semester summaries with CategoryManager on the left */}
       <div className="grid grid-cols-[120px_1fr] gap-1">
-        <div className="p-2">
+        <div className="sticky left-0 z-20 bg-[#FEF9E1] p-2 dark:bg-gray-900">
           <CategoryManager onAddCategory={addCategory} />
         </div>
         <div 
@@ -208,14 +219,17 @@ const CourseGrid: React.FC = () => {
             gridTemplateColumns: `repeat(${semesters.length}, minmax(0, 1fr))` 
           }}
         >
-          {semesters.map((semester) => (
+          {semesters.map((semester, index) => (
             <SemesterSummary
               key={`summary-${semester.id}`}
               categories={categories}
               semester={semester}
+              isFirst={index === 0}
+              isLast={index === semesters.length - 1}
             />
           ))}
         </div>
+      </div>
       </div>
     </div>
   );

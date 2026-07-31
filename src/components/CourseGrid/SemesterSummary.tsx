@@ -4,9 +4,16 @@ import { Category, Semester } from '../../types';
 interface SemesterSummaryProps {
   categories: Category[];
   semester: Semester;
+  isFirst: boolean;
+  isLast: boolean;
 }
 
-const SemesterSummary: React.FC<SemesterSummaryProps> = ({ categories, semester }) => {
+const SemesterSummary: React.FC<SemesterSummaryProps> = ({
+  categories,
+  semester,
+  isFirst,
+  isLast,
+}) => {
   let totalCredits = 0;
   let totalGpaPoints = 0;
   let totalGpaCredits = 0;
@@ -34,9 +41,14 @@ const SemesterSummary: React.FC<SemesterSummaryProps> = ({ categories, semester 
   });
 
   const semesterGpa = totalGpaCredits > 0 ? totalGpaPoints / totalGpaCredits : 0;
+  const edgeRadius =
+    `${isFirst ? 'rounded-bl-lg' : ''} ${isLast ? 'rounded-br-lg' : ''}`;
 
   return (
-    <div className="flex flex-col justify-center py-1 px-1 bg-[#E5D0AC] text-center border-t-2 border-[#8B0029] dark:bg-gray-800 dark:border-[#9f1239] rounded-b-lg" style={{ minHeight: '40px' }}>
+    <div
+      className={`flex flex-col justify-center border-t-2 border-[#8B0029] bg-[#E5D0AC] px-1 py-1 text-center dark:border-[#9f1239] dark:bg-gray-800 ${edgeRadius}`}
+      style={{ minHeight: '40px' }}
+    >
       <div className="text-xs text-[#333333] dark:text-white">
         {totalGpaCredits > 0 ? semesterGpa.toFixed(2) : 'N/A'}
       </div>

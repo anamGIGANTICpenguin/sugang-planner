@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # sugang-planner
 =======
 <<<<<<< HEAD
