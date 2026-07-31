@@ -630,6 +630,10 @@ button,
   overflow-y: auto;
 }
 
+.credit-dropdown-options {
+  max-height: 132px;
+}
+
 .custom-dropdown-options::-webkit-scrollbar {
   width: 6px;
 }

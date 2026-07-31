@@ -12,6 +12,7 @@ interface CustomDropdownProps {
   onChange: (value: string) => void;
   placeholder: string;
   className?: string;
+  optionsClassName?: string;
   disabled?: boolean;
 }
 
@@ -21,6 +22,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   onChange,
   placeholder,
   className = '',
+  optionsClassName = '',
   disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -72,7 +74,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         <div
           role="listbox"
           aria-label={placeholder}
-          className="absolute z-50 w-full mt-1 bg-[#E5D0AC] border border-[#8B0029]/20 rounded shadow-lg custom-dropdown-options dark:bg-gray-800 dark:border-[#9f1239]/20"
+          className={`absolute z-50 mt-1 w-full rounded border border-[#8B0029]/20 bg-[#E5D0AC] shadow-lg custom-dropdown-options dark:border-[#9f1239]/20 dark:bg-gray-800 ${optionsClassName}`}
         >
           {options.map((option) => (
             <button

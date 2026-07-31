@@ -5,7 +5,7 @@ import CustomDropdown from '../Common/CustomDropdown';
 import DynamicInput from '../Common/DynamicInput';
 import { getGradeOptions, useGradeScaleStore } from '../../store/gradeScaleStore';
 
-const creditOptions = [0.5, 1, 2, 3, 4, 5, 6];
+const creditOptions = [0.5, 1, 1.5, 2, 3, 4, 5, 6];
 const creditDropdownOptions = creditOptions.map(credit => ({
   value: credit.toString(),
   label: `${credit}학점`,
@@ -270,6 +270,7 @@ const CourseCell: React.FC<CourseCellProps> = ({
                   setValidationError('');
                 }}
                 placeholder="학점 선택"
+                optionsClassName="credit-dropdown-options"
                 disabled={grade === 'N/A' || grade === 'NP'}
               />
             </div>
