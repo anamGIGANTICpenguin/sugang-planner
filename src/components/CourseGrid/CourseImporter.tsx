@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import TranscriptChart from './TranscriptChart';
 
 const CourseImporter: React.FC = () => {
@@ -47,9 +48,9 @@ const CourseImporter: React.FC = () => {
         <span>KUPID 업로드</span>
       </button>
 
-      {isOpen && (
+      {isOpen && createPortal(
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black bg-opacity-50"
           onClick={(e) => {
             // Close if clicking on the backdrop
             if (e.target === e.currentTarget) {
@@ -89,7 +90,8 @@ const CourseImporter: React.FC = () => {
             </button>
             <TranscriptChart onSuccess={() => setIsOpen(false)} />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
