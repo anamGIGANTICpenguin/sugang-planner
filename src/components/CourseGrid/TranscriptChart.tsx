@@ -1141,9 +1141,18 @@ const TranscriptChart: React.FC<TranscriptChartProps> = ({ onSuccess }) => {
         </div>
       ) : (
         <>
-          <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
+          <p className="mb-2 text-sm text-gray-600 dark:text-gray-300">
             KUPID 전체성적조회에서 학기별 성적과 과목별 성적을 각각 복사해 아래 칸에
             붙여넣으세요.
+          </p>
+
+          <p
+            role="note"
+            className="chrome-recommendation mb-4 rounded-lg bg-[#F4E6C8] px-4 py-3 text-center text-base font-bold shadow-sm dark:bg-gray-900/60"
+          >
+            <strong className="rounded bg-amber-100 px-2 py-1 text-amber-900 dark:bg-amber-400/20 dark:text-amber-200">
+              구글 크롬 사용을 추천드립니다.
+            </strong>
           </p>
 
           <div className="mb-4 rounded-lg border border-[#8B0029]/10 bg-[#F4E6C8] p-3 text-xs text-gray-600 dark:border-white/10 dark:bg-gray-900/60 dark:text-gray-300">

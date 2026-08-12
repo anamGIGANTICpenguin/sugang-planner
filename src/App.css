@@ -634,6 +634,45 @@ button,
   max-height: 132px;
 }
 
+.chrome-recommendation {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.chrome-recommendation::before {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  top: 50%;
+  left: 50%;
+  width: 210px;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at center,
+      #4285f4 0 21%,
+      #f1f3f4 21.5% 26%,
+      transparent 26.5%
+    ),
+    conic-gradient(from -30deg, #ea4335 0 33.333%, #fbbc04 33.333% 66.666%, #34a853 66.666% 100%);
+  opacity: 0.62;
+}
+
+.chrome-recommendation::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: rgba(254, 249, 225, 0.58);
+}
+
+.dark .chrome-recommendation::after {
+  background: rgba(17, 24, 39, 0.64);
+}
+
 .custom-dropdown-options::-webkit-scrollbar {
   width: 6px;
 }
